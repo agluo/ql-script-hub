@@ -1,3 +1,5 @@
+# cron "31 10 * * *"
+
 import requests, re, os, time, random
 from datetime import datetime, timedelta
 
