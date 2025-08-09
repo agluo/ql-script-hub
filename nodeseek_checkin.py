@@ -17,8 +17,8 @@ except ImportError:
     print("未加载通知模块，跳过通知功能")
 
 # ---------------- 签到逻辑 ----------------
-def sign(ns_cookie, ns_random):
-    if not ns_cookie:
+def sign(NODESEEK_COOKIE, ns_random):
+    if not NODESEEK_COOKIE:
         return "invalid", "无有效Cookie"
         
     headers = {
@@ -26,7 +26,7 @@ def sign(ns_cookie, ns_random):
         'origin': "https://www.nodeseek.com",
         'referer': "https://www.nodeseek.com/board",
         'Content-Type': 'application/json',
-        'Cookie': ns_cookie
+        'Cookie': NODESEEK_COOKIE
     }
     try:
         url = f"https://www.nodeseek.com/api/attendance?random={ns_random}"
@@ -44,9 +44,9 @@ def sign(ns_cookie, ns_random):
         return "error", str(e)
 
 # ---------------- 查询签到收益统计函数 ----------------
-def get_signin_stats(ns_cookie, days=30):
+def get_signin_stats(NODESEEK_COOKIE, days=30):
     """查询前days天内的签到收益统计"""
-    if not ns_cookie:
+    if not NODESEEK_COOKIE:
         return None, "无有效Cookie"
     
     if days <= 0:
@@ -56,7 +56,7 @@ def get_signin_stats(ns_cookie, days=30):
         'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36 Edg/125.0.0.0",
         'origin': "https://www.nodeseek.com",
         'referer': "https://www.nodeseek.com/board",
-        'Cookie': ns_cookie
+        'Cookie': NODESEEK_COOKIE
     }
     
     try:
@@ -206,7 +206,7 @@ if __name__ == "__main__":
     random_signin = os.getenv("RANDOM_SIGNIN", "true").lower() == "true"
     
     # 读取Cookie
-    all_cookies = os.getenv("NS_COOKIE", "")
+    all_cookies = os.getenv("NODESEEK_COOKIE", "")
     cookie_list = all_cookies.split("&")
     cookie_list = [c.strip() for c in cookie_list if c.strip()]
     
@@ -214,7 +214,7 @@ if __name__ == "__main__":
     print(f"随机签到: {'启用' if random_signin else '禁用'}")
     
     if len(cookie_list) == 0:
-        print("未找到任何Cookie，请设置NS_COOKIE环境变量")
+        print("未找到任何Cookie，请设置NODESEEK_COOKIE环境变量")
         exit(1)
     
     # 为每个账号生成随机延迟时间
