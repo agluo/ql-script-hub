@@ -1,4 +1,4 @@
-# cron "31 10 * * *"
+# cron "39 12 * * *" script-path=xxx.py,tag=匹配cron用
 
 import requests, re, os, time, random
 from datetime import datetime, timedelta
