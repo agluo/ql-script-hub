@@ -1,10 +1,3 @@
-#!/usr/bin/python3
-# -- coding: utf-8 -- 
-"""
-cron: 0 2 * * *
-new Env('恩山签到')
-"""
-
 import requests, re, os, time, random
 from datetime import datetime, timedelta
 
@@ -69,16 +62,9 @@ def wait_with_countdown(delay_seconds):
         time.sleep(sleep_time)
         remaining -= sleep_time
 
-# 原始代码主体（改进异常处理）
+# 原始代码主体
 if __name__ == "__main__":
     print(f"==== 恩山积分查询开始 - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ====")
-    
-    # 检查cookie配置
-    if not enshanck:
-        res = "❌ 未配置恩山Cookie，请在环境变量中设置 enshanck"
-        print(res)
-        Push(contents=res)
-        exit(1)
     
     # 随机延迟（可选）
     if random_signin:
@@ -97,45 +83,17 @@ if __name__ == "__main__":
     }
     
     session = requests.session()
+    response = session.get('https://www.right.com.cn/FORUM/home.php?mod=spacecp&ac=credit&showcredit=1', headers=headers)
     
     try:
-        response = session.get('https://www.right.com.cn/FORUM/home.php?mod=spacecp&ac=credit&showcredit=1', headers=headers, timeout=15)
-        
-        # 检查是否需要登录（Cookie失效检测）
-        if "登录" in response.text or "login" in response.url.lower() or response.url.find("member.php") != -1:
-            res = "❌ Cookie已失效，请重新获取恩山论坛Cookie"
-            print(res)
-            Push(contents=res)
-        else:
-            # 原始解析逻辑
-            coin_matches = re.findall("恩山币: </em>(.*?)&nbsp;", response.text)
-            point_matches = re.findall("<em>积分: </em>(.*?)<span", response.text)
-            
-            if not coin_matches or not point_matches:
-                # 无法解析积分信息
-                res = "❌ 无法解析积分信息，页面格式可能已变化或Cookie无效"
-                print(res)
-                Push(contents=res)
-            else:
-                # 成功解析
-                coin = coin_matches[0]
-                point = point_matches[0]
-                res = f"恩山币：{coin}\n积分：{point}"
-                print(res)
-                Push(contents=res)  # 保持您的原始调用方式
-                
-    except requests.exceptions.Timeout:
-        res = "❌ 请求超时，网络连接异常"
+        coin = re.findall("恩山币: </em>(.*?)&nbsp;", response.text)[0]
+        point = re.findall("<em>积分: </em>(.*?)<span", response.text)[0]
+        res = f"恩山币：{coin}\n积分：{point}"
         print(res)
-        Push(contents=res)
-    except requests.exceptions.RequestException as e:
-        res = f"❌ 网络请求失败: {str(e)}"
-        print(res)
-        Push(contents=res)
+        Push(contents=res)  # 保持您的原始调用方式
     except Exception as e:
-        # 其他未知异常
-        res = f"❌ 查询异常: {str(e)}"
+        res = f"查询失败: {str(e)}"
         print(res)
-        Push(contents=res)
+        Push(contents=res)  # 异常时也推送
     
     print(f"==== 恩山查询完成 - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ====")
