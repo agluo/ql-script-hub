@@ -94,7 +94,14 @@ if __name__ == "__main__":
         print(res)
         Push(contents=res)  # 保持您的原始调用方式
     except Exception as e:
-        res = f"查询失败: {str(e)}"
+        if "list index out of range" in str(e):
+            if "登录" in response.text or "login" in response.text.lower() or len(response.text) < 1000:
+                res = "Cookie已失效，请重新获取"
+            else:
+                res = "页面格式变化，无法解析积分信息"
+        else:
+            res = f"查询失败: {str(e)}"
+            
         print(res)
         Push(contents=res)  # 异常时也推送
     
