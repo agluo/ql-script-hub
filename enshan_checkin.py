@@ -1,42 +1,44 @@
+#!/usr/bin/python3
+# -- coding: utf-8 -- 
+"""
+cron: 0 2 * * *
+new Env('恩山签到')
+"""
+
 import requests, re, os, time, random
 from datetime import datetime, timedelta
 
 # 配置获取
-ENSHAN_COOKIE = os.getenv("ENSHAN_COOKIE")
-plustoken = os.getenv("plustoken")
+enshanck = os.getenv("enshanck")
+
+# ---------------- 统一通知模块加载 ----------------
+hadsend = False
+send = None
+try:
+    from notify import send
+    hadsend = True
+    print("✅ 已加载notify.py通知模块")
+except ImportError:
+    print("⚠️  未加载通知模块，跳过通知功能")
 
 # 随机化配置
-max_random_delay = int(os.getenv("MAX_RANDOM_DELAY", "3600"))  # 默认1小时随机窗口
+max_random_delay = int(os.getenv("MAX_RANDOM_DELAY", "3600"))
 random_signin = os.getenv("RANDOM_SIGNIN", "true").lower() == "true"
 
-# 随机User-Agent池
-USER_AGENTS = [
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:126.0) Gecko/20100101 Firefox/126.0",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15",
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Edge/125.0.0.0 Safari/537.36"
-]
+# 固定安全的User-Agent
+USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
 
-def Push(title, contents):
-    """Push+推送函数"""
-    if not plustoken:
-        print("未配置push+token，跳过推送")
-        return
-        
-    headers = {'Content-Type': 'application/json'}
-    json_data = {
-        "token": plustoken, 
-        'title': title, 
-        'content': contents.replace('\n', '<br>'), 
-        "template": "json"
-    }
-    try:
-        resp = requests.post('http://www.pushplus.plus/send', json=json_data, headers=headers, timeout=10).json()
-        print('Push+推送成功' if resp.get('code') == 200 else f'Push+推送失败: {resp}')
-    except Exception as e:
-        print(f'Push+推送异常: {e}')
+def notify_user(title, content):
+    """统一通知函数"""
+    if hadsend:
+        try:
+            send(title, content)
+            print(f"✅ 通知发送完成: {title}")
+        except Exception as e:
+            print(f"❌ 通知发送失败: {e}")
+    else:
+        print(f"📢 {title}")
+        print(f"📄 {content}")
 
 def format_time_remaining(seconds):
     """格式化剩余时间显示"""
@@ -61,7 +63,6 @@ def wait_with_countdown(delay_seconds, task_name):
         
     print(f"{task_name} 需要等待 {format_time_remaining(delay_seconds)}")
     
-    # 显示倒计时（每10秒显示一次，最后10秒每秒显示）
     remaining = delay_seconds
     while remaining > 0:
         if remaining <= 10 or remaining % 10 == 0:
@@ -77,23 +78,17 @@ def random_sleep(min_seconds=1, max_seconds=5):
     print(f"随机等待 {delay:.1f} 秒...")
     time.sleep(delay)
 
-def get_random_user_agent():
-    """获取随机User-Agent"""
-    return random.choice(USER_AGENTS)
-
 def enshan_signin():
     """恩山论坛签到"""
-    if not ENSHAN_COOKIE:
-        print("未配置恩山cookie，无法签到")
-        return False, "未配置Cookie"
+    if not enshanck:
+        print("❌ 未配置恩山cookie，无法签到")
+        return False, "未配置Cookie，请在环境变量中设置 enshanck"
 
-    # 随机User-Agent
-    user_agent = get_random_user_agent()
-    print(f"使用随机User-Agent: {user_agent[:50]}...")
+    print("使用固定User-Agent（安全模式）")
     
     headers = {
-        "User-Agent": user_agent,
-        "Cookie": ENSHAN_COOKIE,
+        "User-Agent": USER_AGENT,
+        "Cookie": enshanck,
         "Referer": "https://www.right.com.cn/FORUM/",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
         "Accept-Language": "zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2",
@@ -106,13 +101,13 @@ def enshan_signin():
     session.headers.update(headers)
     
     try:
-        # 1. 随机等待后检查登录状态
+        # 1. 检查登录状态
         random_sleep(1, 3)
         print("正在获取用户信息...")
         response = session.get('https://www.right.com.cn/FORUM/home.php?mod=spacecp&ac=credit&showcredit=1', timeout=15)
         
         if "登录" in response.text or "login" in response.url.lower():
-            return False, "Cookie已失效，请重新获取"
+            return False, "Cookie已失效，请重新获取恩山论坛Cookie"
         
         # 解析积分信息
         try:
@@ -120,9 +115,9 @@ def enshan_signin():
             point_before = re.findall(r"<em>积分: </em>(.*?)<span", response.text)[0]
             print(f"签到前: 恩山币 {coin_before}, 积分 {point_before}")
         except (IndexError, AttributeError):
-            return False, "无法解析用户积分信息"
+            return False, "无法解析用户积分信息，请检查Cookie是否正确"
         
-        # 2. 随机等待后执行签到
+        # 2. 执行签到
         random_sleep(2, 5)
         print("正在执行签到...")
         
@@ -132,16 +127,20 @@ def enshan_signin():
         # 检查签到结果
         signin_text = signin_response.text
         if "签到成功" in signin_text or "恭喜" in signin_text:
-            status = "签到成功"
+            status = "✅ 签到成功"
+            status_emoji = "🎉"
         elif "已经签到" in signin_text or "重复签到" in signin_text or "今日已签" in signin_text:
-            status = "今天已签到"
+            status = "ℹ️ 今天已签到"
+            status_emoji = "📅"
         elif "签到失败" in signin_text:
-            status = "签到失败"
+            status = "❌ 签到失败"
+            status_emoji = "⚠️"
         else:
-            status = "签到状态未知"
+            status = "❓ 签到状态未知"
+            status_emoji = "❓"
             print(f"签到响应内容片段: {signin_text[:200]}")
         
-        # 3. 随机等待后再次获取积分信息
+        # 3. 获取签到后积分信息
         random_sleep(3, 6)
         print("正在获取签到后积分信息...")
         response_after = session.get('https://www.right.com.cn/FORUM/home.php?mod=spacecp&ac=credit&showcredit=1', timeout=15)
@@ -160,26 +159,27 @@ def enshan_signin():
         except ValueError:
             coin_gain, point_gain = 0, 0
         
-        # 收益提示
-        gain_text = ""
+        # 格式化结果消息
+        gain_info = ""
         if coin_gain > 0 or point_gain > 0:
-            gain_text = f" (+{coin_gain} 恩山币, +{point_gain} 积分)"
+            gain_info = f"\n🎁 本次收益: +{coin_gain} 恩山币, +{point_gain} 积分"
         
-        result = f"""📅 恩山论坛签到结果
+        result = f"""{status_emoji} 恩山论坛签到结果
 
 🎯 签到状态: {status}
-💰 恩山币: {coin_before} → {coin_after} (+{coin_gain})
-⭐ 积分: {point_before} → {point_after} (+{point_gain})
-🕐 签到时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}{gain_text}"""
+💰 恩山币: {coin_before} → {coin_after}
+⭐ 积分: {point_before} → {point_after}{gain_info}
+🕐 签到时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"""
         
-        return True, result
+        is_success = "签到成功" in status or "已签到" in status
+        return is_success, result
         
     except requests.exceptions.Timeout:
-        return False, "请求超时，网络连接异常"
+        return False, "❌ 请求超时，网络连接异常"
     except requests.exceptions.RequestException as e:
-        return False, f"网络请求失败: {str(e)}"
+        return False, f"❌ 网络请求失败: {str(e)}"
     except Exception as e:
-        return False, f"签到过程中发生异常: {str(e)}"
+        return False, f"❌ 签到过程中发生异常: {str(e)}"
 
 if __name__ == "__main__":
     print(f"==== 恩山论坛签到开始 ====")
@@ -203,9 +203,9 @@ if __name__ == "__main__":
     
     print(f"\n{message}")
     
-    # 推送结果
+    # 发送通知
     title = "恩山签到成功" if success else "恩山签到失败"
-    Push(title, message)
+    notify_user(title, message)
     
     print(f"\n==== 恩山签到任务完成 ====")
     print(f"完成时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
