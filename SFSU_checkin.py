@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
+# cron "39 15 * * *" script-path=xxx.py,tag=匹配cron用
 
 """
 顺丰速运自动化脚本
@@ -17,7 +18,6 @@
    - https://mcs-mimp-web.sf-express.com/mcs-mimp/share/app/shareRedirect
 编码: 抓取URL后，使用 https://www.toolhelper.cn/EncodeDecode/Url 进行编码
 
-Cron: 11 7 * * *
 """
 
 import hashlib
