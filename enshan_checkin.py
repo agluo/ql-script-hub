@@ -4,7 +4,7 @@ import requests, re, os, time, random
 from datetime import datetime, timedelta
 
 # 配置恩山的cookie
-enshanck = os.getenv("enshanck")
+enshan_cookie = os.getenv("enshan_cookie")
 
 # ---------------- 统一通知模块加载（和NodeSeek一样）----------------
 hadsend = False
@@ -81,7 +81,7 @@ if __name__ == "__main__":
     
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.5359.125 Safari/537.36",
-        "Cookie": enshanck,
+        "Cookie": enshan_cookie,
     }
     
     session = requests.session()
