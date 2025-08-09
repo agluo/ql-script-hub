@@ -82,12 +82,6 @@ def enshan_signin():
     headers = {
         "User-Agent": USER_AGENT,
         "Cookie": ENSHAN_COOKIE,
-        "Referer": "https://www.right.com.cn/FORUM/",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-        "Accept-Language": "zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2",
-        "Accept-Encoding": "gzip, deflate",
-        "Connection": "keep-alive",
-        "Upgrade-Insecure-Requests": "1"
     }
     
     session = requests.Session()
@@ -97,7 +91,7 @@ def enshan_signin():
         # 1. 检查登录状态
         random_sleep(1, 3)
         print("正在获取用户信息...")
-        response = session.get('https://www.right.com.cn/FORUM/home.php?mod=spacecp&ac=credit&showcredit=1', timeout=15)
+        response = session.get('https://www.right.com.cn/FORUM/home.php?mod=spacecp&ac=credit&showcredit=1', headers=headers)
         
         if "登录" in response.text or "login" in response.url.lower():
             return False, "Cookie已失效，请重新获取恩山论坛Cookie"
