@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# cron "0 23 14 * * *" script-path=xxx.py,tag=匹配cron用
+# cron "23 14 * * *" script-path=xxx.py,tag=匹配cron用
 
 import os
 import time
