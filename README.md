@@ -26,7 +26,11 @@ QL Script Hub 是一个专为青龙面板打造的综合性脚本库，提供签
 ql-script-hub/
 ├── README.md              # 项目说明文档
 ├── LICENSE                # 开源许可证
-└── checkin.py             # 签到类脚本
+├── enshan_checkin.py      # 恩山论坛签到脚本
+├── nodeseek_checkin.py    # nodeseek签到脚本
+├── quark_signin.py        # 夸克网盘签到脚本
+├── SFSU_checkin.py        # 顺丰速运签到脚本
+└── tieba_checkin.py       # 贴吧签到脚本
 ```
 
 ## 🚀 快速开始
@@ -58,6 +62,12 @@ ql-script-hub/
 | `DD_BOT_SECRET` | 钉钉机器人密钥 | 可选 | `xxxxxxxxxxxxxxxxxx` | 钉钉群机器人密钥（可选） |
 | `BARK_PUSH` | Bark推送地址 | 可选 | `https://api.day.app/your_key/` | iOS Bark推送 |
 
+#### 🏔️ 恩山论坛签到配置
+
+| 变量名 | 说明 | 是否必需 | 示例值 | 备注 |
+|--------|------|----------|--------|------|
+| `enshan_cookie` | 恩山论坛Cookie | **必需** | `完整的Cookie字符串` | 单账号Cookie |
+
 #### 📱 NodeSeek 签到配置
 
 | 变量名 | 说明 | 是否必需 | 示例值 | 备注 |
@@ -65,17 +75,23 @@ ql-script-hub/
 | `NODESEEK_COOKIE` | NodeSeek网站Cookie | **必需** | `cookie1&cookie2&cookie3` | 多账号用`&`分隔 |
 | `NS_RANDOM` | 签到随机参数 | 可选 | `true` | 默认值，通常无需修改 |
 
-#### 🏔️ 恩山论坛签到配置
-
-| 变量名 | 说明 | 是否必需 | 示例值 | 备注 |
-|--------|------|----------|--------|------|
-| `enshan_cookie` | 恩山论坛Cookie | **必需** | `完整的Cookie字符串` | 单账号Cookie |
-
 #### ☁️ 夸克网盘签到配置
 
 | 变量名 | 说明 | 是否必需 | 示例值 | 备注 |
 |--------|------|----------|--------|------|
 | `QUARK_COOKIE` | 夸克网盘Cookie | **必需** | `cookie1&&cookie2` | 多账号用`&&`或回车分隔 |
+
+#### 📦 顺丰速运签到配置
+
+| 变量名 | 说明 | 是否必需 | 示例值 | 备注 |
+|--------|------|----------|--------|------|
+| `sfsyUrl` | 顺丰速运登录URL | **必需** | `https://mcs-mimp...` | 抓包获取，多账号换行 |
+
+#### 百度贴吧签到配置
+
+| 变量名 | 说明 | 是否必需 | 示例值 | 备注 |
+|--------|------|----------|--------|------|
+| `TIEBA_COOKIE` | 百度贴吧Cookie | **必需** | `BDUSS=xxxxxx; STOKEN=xxxxx...` | 完整的Cookie字符串，多账号换行 |
 
 #### ⏰ 随机化配置（所有脚本共用）
 
@@ -95,13 +111,13 @@ ql-script-hub/
 
 ### 🍪 Cookie获取方式
 
-#### NodeSeek Cookie
-1. 浏览器访问 [nodeseek.com](https://www.nodeseek.com) 并登录
+#### 恩山论坛 Cookie  
+1. 浏览器访问 [恩山论坛](https://www.right.com.cn/FORUM/) 并登录
 2. F12 开发者工具 → Network → 刷新页面
 3. 找到请求头中的 `Cookie` 完整复制
 
-#### 恩山论坛 Cookie  
-1. 浏览器访问 [恩山论坛](https://www.right.com.cn/FORUM/) 并登录
+#### NodeSeek Cookie
+1. 浏览器访问 [nodeseek.com](https://www.nodeseek.com) 并登录
 2. F12 开发者工具 → Network → 刷新页面
 3. 找到请求头中的 `Cookie` 完整复制
 
@@ -109,6 +125,19 @@ ql-script-hub/
 1. 浏览器访问 [夸克网盘](https://pan.quark.cn/) 并登录
 2. F12 开发者工具 → Network → 刷新页面  
 3. 找到请求头中的 `Cookie` 完整复制
+
+#### 顺丰速运 sfsyUrl
+1. 顺丰APP绑定微信后，添加机器人发送"顺丰"
+2. 打开小程序或APP-我的-积分，抓包以下URL之一:
+   - `https://mcs-mimp-web.sf-express.com/mcs-mimp/share/weChat/shareGiftReceiveRedirect`
+   - `https://mcs-mimp-web.sf-express.com/mcs-mimp/share/app/shareRedirect`
+3. 抓取URL后，使用 [URL编码工具](https://www.toolhelper.cn/EncodeDecode/Url) 进行编码
+
+#### 百度贴吧 Cookie
+1. 浏览器访问 [tieba.baidu.com](https://tieba.baidu.com) 并登录
+2. F12 开发者工具 → Network → 刷新页面  
+3. 找到请求头中的完整 `Cookie` 复制
+4. 确保包含 `BDUSS` 参数
 
 ---
 
