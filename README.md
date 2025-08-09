@@ -26,20 +26,7 @@ QL Script Hub 是一个专为青龙面板打造的综合性脚本库，提供签
 ql-script-hub/
 ├── README.md              # 项目说明文档
 ├── LICENSE                # 开源许可证
-├── config.sample.js       # 配置文件示例
-├── .gitignore            # Git忽略文件
-├── checkin/              # 签到类脚本
-│   ├── README.md         # 签到脚本说明
-│   └── example_checkin.js # 签到示例脚本
-├── rewards/              # 薅羊毛类脚本
-│   ├── README.md         # 薅羊毛脚本说明
-│   └── example_rewards.js # 薅羊毛示例脚本
-├── monitor/              # 监控类脚本
-│   ├── README.md         # 监控脚本说明
-│   └── example_monitor.js # 监控示例脚本
-└── utils/                # 工具函数库
-    ├── common.js         # 通用工具函数
-    └── notify.js         # 通知模块
+└── checkin.py             # 签到类脚本
 ```
 
 ## 🚀 快速开始
@@ -53,90 +40,92 @@ ql-script-hub/
 
 1. **拉取仓库**
    ```bash
-   # 在青龙面板中添加订阅
+   # 在青龙面板订阅管理中添加订阅
    # 订阅地址：https://github.com/agluo/ql-script-hub.git
    ```
-
+  <img width="774" height="1112" alt="image" src="https://github.com/user-attachments/assets/de6cf07f-7af2-42b9-8321-c2ccc542820b" />
+  
 2. **配置环境变量**
-   ```bash
-   # 复制配置文件模板
-   cp config.sample.js config.js
+
    
-   # 编辑配置文件，填入你的账号信息
-   ```
+| 变量名 | 说明 | 是否必需 | 示例值 | 备注 |
+|--------|------|----------|--------|------|
+| `TG_BOT_TOKEN` | Telegram机器人Token | 推荐 | `1234567890:AAG9rt-6RDaaX0HBLZQq0laNOh898iFYaRQ` | 获取方式见下方说明 |
+| `TG_USER_ID` | Telegram用户ID | 推荐 | `1434078534` | 获取方式见下方说明 |
+| `PUSH_KEY` | Server酱推送Key | 可选 | `SCTxxxxxxxxxxxxxxxxxxxxx` | 微信推送，访问 sct.ftqq.com 获取 |
+| `PUSH_PLUS_TOKEN` | Push+推送Token | 可选 | `xxxxxxxxxxxxxxxxxx` | 微信推送，访问 pushplus.plus 获取 |
+| `DD_BOT_TOKEN` | 钉钉机器人Token | 可选 | `xxxxxxxxxxxxxxxxxx` | 钉钉群机器人 |
+| `DD_BOT_SECRET` | 钉钉机器人密钥 | 可选 | `xxxxxxxxxxxxxxxxxx` | 钉钉群机器人密钥（可选） |
+| `BARK_PUSH` | Bark推送地址 | 可选 | `https://api.day.app/your_key/` | iOS Bark推送 |
 
-3. **运行脚本**
-   ```bash
-   # 在青龙面板中创建定时任务
-   node checkin/example_checkin.js
-   ```
+#### 📱 NodeSeek 签到配置
 
-## 📂 脚本分类
+| 变量名 | 说明 | 是否必需 | 示例值 | 备注 |
+|--------|------|----------|--------|------|
+| `NODESEEK_COOKIE` | NodeSeek网站Cookie | **必需** | `cookie1&cookie2&cookie3` | 多账号用`&`分隔 |
+| `NS_RANDOM` | 签到随机参数 | 可选 | `true` | 默认值，通常无需修改 |
 
-### 🎯 签到脚本 (checkin/)
-自动完成各种平台的签到任务，获取签到奖励。
+#### 🏔️ 恩山论坛签到配置
 
-**支持平台：**
-- 爱奇艺VIP签到 (iqiyi_checkin.js) - 获取VIP成长值
-- 微博签到 (weibo_checkin.js) - 主站签到 + 超话签到
-- 示例签到脚本 (example_checkin.js) - 开发模板
+| 变量名 | 说明 | 是否必需 | 示例值 | 备注 |
+|--------|------|----------|--------|------|
+| `enshan_cookie` | 恩山论坛Cookie | **必需** | `完整的Cookie字符串` | 单账号Cookie |
 
-### 💰 薅羊毛脚本 (rewards/)
-自动参与各种活动，获取优惠券、积分等奖励。
+#### ☁️ 夸克网盘签到配置
 
-**支持活动：**
-- 示例薅羊毛脚本 (example_rewards.js) - 开发模板
-- 待添加更多平台活动...
+| 变量名 | 说明 | 是否必需 | 示例值 | 备注 |
+|--------|------|----------|--------|------|
+| `QUARK_COOKIE` | 夸克网盘Cookie | **必需** | `cookie1&&cookie2` | 多账号用`&&`或回车分隔 |
 
-### 📊 监控脚本 (monitor/)
-监控商品价格、库存等信息，及时通知变化。
+#### ⏰ 随机化配置（所有脚本共用）
 
-**监控功能：**
-- 京东价格监控 (jd_price_monitor.js) - 价格变动、目标价格、库存监控
-- 示例监控脚本 (example_monitor.js) - 开发模板
+| 变量名 | 说明 | 是否必需 | 示例值 | 备注 |
+|--------|------|----------|--------|------|
+| `RANDOM_SIGNIN` | 启用随机签到 | 可选 | `true` | `true`启用，`false`禁用 |
+| `MAX_RANDOM_DELAY` | 随机延迟窗口（秒） | 可选 | `3600` | `3600`=1小时，`1800`=30分钟 |
 
-### 🛠️ 工具函数 (utils/)
-提供通用的工具函数和通知模块。
+---
 
-**功能模块：**
-- `common.js` - 通用工具函数
-- `notify.js` - 多平台通知模块
+## 🔧 获取方式说明
 
-## ⚙️ 配置说明
+### 📱 Telegram配置获取
+1. **创建机器人**: 与 [@BotFather](https://t.me/botfather) 对话，发送 `/newbot` 创建机器人
+2. **获取Token**: 创建完成后会收到 `TG_BOT_TOKEN`
+3. **获取用户ID**: 与 [@userinfobot](https://t.me/userinfobot) 对话获取 `TG_USER_ID`
 
-1. 复制 `config.sample.js` 为 `config.js`
-2. 根据需要修改配置参数
-3. 在青龙面板中设置对应的环境变量
+### 🍪 Cookie获取方式
 
-```javascript
-// 配置示例
-module.exports = {
-    // 通知配置
-    notify: {
-        bark: "your_bark_key",
-        serverChan: "your_server_chan_key",
-        pushplus: "your_pushplus_token"
-    },
-    
-    // 脚本配置
-    scripts: {
-        checkin: {
-            enabled: true,
-            interval: "0 9 * * *"  // 每天9点执行
-        }
-    }
-};
+#### NodeSeek Cookie
+1. 浏览器访问 [nodeseek.com](https://www.nodeseek.com) 并登录
+2. F12 开发者工具 → Network → 刷新页面
+3. 找到请求头中的 `Cookie` 完整复制
+
+#### 恩山论坛 Cookie  
+1. 浏览器访问 [恩山论坛](https://www.right.com.cn/FORUM/) 并登录
+2. F12 开发者工具 → Network → 刷新页面
+3. 找到请求头中的 `Cookie` 完整复制
+
+#### 夸克网盘 Cookie
+1. 浏览器访问 [夸克网盘](https://pan.quark.cn/) 并登录
+2. F12 开发者工具 → Network → 刷新页面  
+3. 找到请求头中的 `Cookie` 完整复制
+
+---
+
+## 📝 配置示例
+
+```bash
+# 通知配置（推荐Telegram）
+TG_BOT_TOKEN=1234567890:AAG9rt-6RDaaX0HBLZQq0laNOh898iFYaRQ
+TG_USER_ID=1434078534
+
+# 随机化配置（可选）
+RANDOM_SIGNIN=true
+MAX_RANDOM_DELAY=3600
 ```
 
-## 📱 通知配置
+---
 
-支持多种通知方式：
-
-- **Bark** - iOS推送通知
-- **Server酱** - 微信推送
-- **PushPlus** - 微信推送
-- **钉钉机器人** - 群组通知
-- **企业微信** - 企业通知
 
 ## 🤝 贡献指南
 
