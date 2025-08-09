@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# cron "24 14 * * *"
 
 import os
 import time
