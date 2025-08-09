@@ -1,15 +1,8 @@
-#!/usr/bin/python3
-# -- coding: utf-8 -- 
-"""
-cron: 0 2 * * *
-new Env('恩山签到')
-"""
-
 import requests, re, os, time, random
 from datetime import datetime, timedelta
 
 # 配置获取
-enshanck = os.getenv("enshanck")
+ENSHAN_COOKIE = os.getenv("ENSHAN_COOKIE")
 
 # ---------------- 统一通知模块加载 ----------------
 hadsend = False
@@ -80,15 +73,15 @@ def random_sleep(min_seconds=1, max_seconds=5):
 
 def enshan_signin():
     """恩山论坛签到"""
-    if not enshanck:
+    if not ENSHAN_COOKIE:
         print("❌ 未配置恩山cookie，无法签到")
-        return False, "未配置Cookie，请在环境变量中设置 enshanck"
+        return False, "未配置Cookie，请在环境变量中设置 ENSHAN_COOKIE"
 
     print("使用固定User-Agent（安全模式）")
     
     headers = {
         "User-Agent": USER_AGENT,
-        "Cookie": enshanck,
+        "Cookie": ENSHAN_COOKIE,
         "Referer": "https://www.right.com.cn/FORUM/",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
         "Accept-Language": "zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2",
