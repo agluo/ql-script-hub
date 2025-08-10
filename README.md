@@ -26,10 +26,12 @@ QL Script Hub 是一个专为青龙面板打造的综合性脚本库，提供签
 ql-script-hub/
 ├── README.md              # 项目说明文档
 ├── LICENSE                # 开源许可证
+├── aliyunpan_signin.py    # 阿里云盘签到脚本 
 ├── enshan_checkin.py      # 恩山论坛签到脚本
 ├── nodeseek_checkin.py    # nodeseek签到脚本
 ├── quark_signin.py        # 夸克网盘签到脚本
 ├── SFSU_checkin.py        # 顺丰速运签到脚本
+├── smzdm_checkin.py       # 什么值得买签到脚本 
 └── tieba_checkin.py       # 贴吧签到脚本
 ```
 
@@ -93,6 +95,21 @@ ql-script-hub/
 |--------|------|----------|--------|------|
 | `TIEBA_COOKIE` | 百度贴吧Cookie | **必需** | `BDUSS=xxxxxx; STOKEN=xxxxx...` | 完整的Cookie字符串，多账号换行 |
 
+#### ☁️ 阿里云盘签到配置 
+
+| 变量名 | 说明 | 是否必需 | 示例值 | 备注 |
+|--------|------|----------|--------|------|
+| `ALIYUN_REFRESH_TOKEN` | 阿里云盘refresh_token | **必需** | `crsh166bdfde4751a4c0...` | 多账号用`&`或换行分隔 |
+| `AUTO_UPDATE_TOKEN` | 自动更新Token | 可选 | `true` | 默认`true`，自动维护token |
+| `PRIVACY_MODE` | 隐私保护模式 | 可选 | `true` | 默认`true`，脱敏显示敏感信息 |
+
+#### 🛒 什么值得买签到配置 
+
+| 变量名 | 说明 | 是否必需 | 示例值 | 备注 |
+|--------|------|----------|--------|------|
+| `SMZDM_COOKIE` | 什么值得买Cookie | **必需** | `__ckguid==xxxxx; device_id=xxxxx...` | 完整Cookie，多账号换行分隔 |
+
+
 #### ⏰ 随机化配置（所有脚本共用）
 
 | 变量名 | 说明 | 是否必需 | 示例值 | 备注 |
@@ -138,6 +155,20 @@ ql-script-hub/
 2. F12 开发者工具 → Network → 刷新页面  
 3. 找到请求头中的完整 `Cookie` 复制
 4. 确保包含 `BDUSS` 参数
+
+### 🍪 Cookie/Token获取方式
+
+#### 阿里云盘 refresh_token 
+1. 浏览器访问 [阿里云盘网页版](https://www.aliyundrive.com/) 并登录
+2. 按 `F12` 打开开发者工具 → `Application` 标签页
+3. 左侧找到 `Local Storage` → `https://www.aliyundrive.com`
+4. 找到 `token` 项，复制 `refresh_token` 的值
+
+#### 什么值得买 Cookie 
+1. 浏览器访问 [什么值得买](https://www.smzdm.com/) 并登录
+2. 按 `F12` 打开开发者工具 → `Network` 标签页
+3. 刷新页面，找到任意请求的 `Request Headers`
+4. 复制完整的 `Cookie` 值
 
 ---
 
