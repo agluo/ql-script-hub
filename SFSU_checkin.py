@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 cron "9 15 * * *" script-path=xxx.py,tag=匹配cron用
-new Env('恩山论坛签到')
+new Env('顺丰速运签到')
 """
 """
 顺丰速运自动化脚本
