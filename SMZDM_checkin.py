@@ -3,7 +3,7 @@ cron: 39 17 * * *
 new Env('什么值得买签到')
 """
 
-import requests, json, time, hashlib, os, random
+import requests, json, time, hashlib, os, random, re
 from datetime import datetime, timedelta
 
 # ---------------- 统一通知模块加载 ----------------
@@ -57,11 +57,98 @@ def notify_user(title, content):
     else:
         print(f"📢 {title}\n📄 {content}")
 
+def get_user_info(cookie):
+    """获取用户基本信息"""
+    try:
+        print("👤 正在获取用户信息...")
+        infourl = 'https://zhiyou.smzdm.com/user/'
+        headers = {
+            'Host': 'zhiyou.smzdm.com',
+            'Accept': '*/*',
+            'Connection': 'keep-alive',
+            'Cookie': cookie,
+            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148/smzdm 10.4.6 rv:130.1 (iPhone 13; iOS 15.6; zh_CN)/iphone_smzdmapp/10.4.6/wkwebview/jsbv_1.0.0',
+            'Accept-Language': 'zh-CN,zh-Hans;q=0.9',
+            'Referer': 'https://m.smzdm.com/',
+            'Accept-Encoding': 'gzip, deflate, br'
+        }
+        
+        response_info = requests.get(url=infourl, headers=headers, timeout=15).text
+        
+        # 解析用户信息
+        name_match = re.search(r'<a href="https://zhiyou.smzdm.com/user"> (.*?) </a>', response_info)
+        level_match = re.search(r'<img src=".*?/level/(\d+).png.*?"', response_info)
+        gold_match = re.search(r'<div class="assets-part assets-gold">.*?<span class="assets-part-element assets-num">(.*?)</span>', response_info, re.S)
+        silver_match = re.search(r'<div class="assets-part assets-prestige">.*?<span class="assets-part-element assets-num">(.*?)</span>', response_info, re.S)
+        
+        name = name_match.group(1).strip() if name_match else "未知用户"
+        level = level_match.group(1) if level_match else "0"
+        gold = gold_match.group(1).strip() if gold_match else "0"
+        silver = silver_match.group(1).strip() if silver_match else "0"
+        
+        print(f"👤 用户: {name} (VIP{level})")
+        print(f"💰 金币: {gold}, 🪙 碎银: {silver}")
+        
+        return name, level, gold, silver
+    except Exception as e:
+        print(f"❌ 获取用户信息失败: {e}")
+        return "未知用户", "0", "0", "0"
+
+def get_monthly_exp(cookie):
+    """获取本月经验"""
+    try:
+        print("📊 正在获取本月经验...")
+        current_month = datetime.now().strftime('%Y-%m')
+        total_exp = 0
+        
+        for page in range(1, 4):  # 查询前3页
+            url = f'https://zhiyou.m.smzdm.com/user/exp/ajax_log?page={page}'
+            headers = {
+                'Host': 'zhiyou.m.smzdm.com',
+                'Accept': 'application/json, text/plain, */*',
+                'Connection': 'keep-alive',
+                'Cookie': cookie,
+                'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148/smzdm 10.4.40 rv:137.6 (iPhone 13; iOS 15.6; zh_CN)/iphone_smzdmapp/10.4.40/wkwebview/jsbv_1.0.0',
+                'Accept-Language': 'zh-CN,zh-Hans;q=0.9',
+                'Referer': 'https://zhiyou.m.smzdm.com/user/exp/',
+                'Accept-Encoding': 'gzip, deflate, br'
+            }
+            
+            resp = requests.get(url=url, headers=headers, timeout=10)
+            if resp.status_code != 200:
+                break
+                
+            result = resp.json()
+            rows = result.get('data', {}).get('rows', [])
+            
+            if not rows:
+                break
+                
+            for row in rows:
+                exp_date = row.get('creation_date', '')[:7]
+                if exp_date == current_month:
+                    total_exp += int(row.get('add_exp', 0))
+                elif exp_date < current_month:
+                    # 如果日期小于当前月份，说明已经查完了
+                    return total_exp
+            
+            # 添加请求间隔
+            time.sleep(random.uniform(0.5, 1.5))
+        
+        print(f"📊 本月经验: {total_exp}")
+        return total_exp
+    except Exception as e:
+        print(f"❌ 获取月度经验失败: {e}")
+        return 0
+
 def smzdm_signin(cookie, index):
     """什么值得买签到 - 单个账号"""
     print(f"\n==== 开始第{index}个帐号签到 ====")
     
     try:
+        # 0. 获取用户信息
+        name, level, gold, silver = get_user_info(cookie)
+        
         # 1. 获取Token
         print("🤖 正在获取Token...")
         ts = int(round(time.time() * 1000))
@@ -96,11 +183,10 @@ def smzdm_signin(cookie, index):
             print(error_msg)
             return error_msg, False
         
-        # 检查API返回的错误码 - 修复：支持字符串和数字类型
+        # 检查API返回的错误码
         error_code = result.get('error_code')
         error_msg_api = result.get('error_msg', '未知错误')
         
-        # 将error_code转换为字符串进行比较，支持 "0" 和 0
         if str(error_code) != "0":
             error_msg = f"❌ 账号{index}: Token获取失败 - 错误码: {error_code}, 错误信息: {error_msg_api}"
             print(error_msg)
@@ -113,7 +199,7 @@ def smzdm_signin(cookie, index):
             return error_msg, False
             
         token = result['data']['token']
-        print(f"✅ Token获取成功: {token[:20]}...")
+        print(f"✅ Token获取成功")
 
         # 2. 执行签到
         print("🎯 正在执行签到...")
@@ -146,7 +232,7 @@ def smzdm_signin(cookie, index):
         
         signin_msg = signin_result.get('error_msg', '签到状态未知')
         signin_code = signin_result.get('error_code', -1)
-        print(f"🎯 签到状态码: {signin_code}, 签到消息: {signin_msg}")
+        print(f"🎯 签到状态: {signin_msg}")
         
         # 3. 获取签到奖励
         print("🎁 正在查询签到奖励...")
@@ -158,7 +244,6 @@ def smzdm_signin(cookie, index):
             try:
                 reward_result = html_reward.json()
                 
-                # 修复：支持字符串和数字类型的error_code
                 if str(reward_result.get('error_code')) == "0" and reward_result.get('data'):
                     normal_reward = reward_result["data"].get("normal_reward", {})
                     if normal_reward:
@@ -172,15 +257,24 @@ def smzdm_signin(cookie, index):
         else:
             print(f"⚠️ 奖励查询失败，状态码: {html_reward.status_code}")
         
-        # 4. 组合结果消息
+        # 4. 获取本月经验
+        monthly_exp = get_monthly_exp(cookie)
+        
+        # 5. 组合结果消息
         final_msg = f"""什么值得买签到结果
 
-👤 账号: 第{index}个账号
+👤 账号: 第{index}个账号 ({name})
+⭐ 等级: VIP{level}
+💰 金币: {gold}
+🪙 碎银: {silver}
+📊 本月经验: {monthly_exp}
+
 🎯 签到状态: {signin_msg}
 📊 状态码: {signin_code}{reward_info}
+
 🕐 签到时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"""
         
-        # 判断是否成功 - 修复：支持字符串和数字类型的error_code
+        # 判断是否成功
         is_success = (str(signin_code) == "0" or 
                      "成功" in signin_msg or 
                      "已经" in signin_msg or 
