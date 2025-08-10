@@ -59,13 +59,6 @@ def mask_sensitive_data(data, data_type="token"):
                 masked_username = f"{username[:2]}{'*' * (len(username) - 2)}"
             return f"{masked_username}@{domain}"
         return "***@***.***"
-    elif data_type == "username":
-        if len(data) <= 2:
-            return "*" * len(data)
-        elif len(data) <= 4:
-            return f"{data[0]}{'*' * (len(data) - 1)}"
-        else:
-            return f"{data[:2]}{'*' * (len(data) - 4)}{data[-2:]}"
     else:
         return str(data)
 
@@ -554,26 +547,21 @@ class AliYun:
                 nick_name = result.get("nick_name", user_name)
                 phone = result.get("phone", "")
                 
-                # 脱敏处理
-                if privacy_mode:
-                    display_name = mask_sensitive_data(nick_name, "username")
-                    display_phone = mask_sensitive_data(phone, "phone") if phone else ""
-                else:
-                    display_name = nick_name
-                    display_phone = phone[:3] + "****" + phone[-4:] if phone and len(phone) >= 7 else phone
+                # 手机号脱敏处理
+                display_phone = mask_sensitive_data(phone, "phone") if phone else ""
                 
-                print(f"👤 用户: {display_name}")
+                print(f"👤 用户: {nick_name}")
                 if display_phone:
                     print(f"📱 手机: {display_phone}")
                     
-                return display_name, display_phone, nick_name, phone
+                return nick_name, display_phone
             else:
                 print(f"⚠️ 获取用户信息失败，状态码: {response.status_code}")
-                return "未知用户", "", "未知用户", ""
+                return "未知用户", ""
                 
         except Exception as e:
             print(f"❌ 获取用户信息异常: {e}")
-            return "未知用户", "", "未知用户", ""
+            return "未知用户", ""
 
     def get_storage_info(self, access_token):
         """获取存储空间信息"""
@@ -730,7 +718,7 @@ class AliYun:
             return full_error_msg, False
         
         # 2. 获取用户信息
-        display_name, display_phone, real_name, real_phone = self.get_user_info(access_token)
+        user_name, display_phone = self.get_user_info(access_token)
         
         # 3. 获取存储信息
         used_gb, total_gb = self.get_storage_info(access_token)
@@ -739,16 +727,11 @@ class AliYun:
         sign_msg, is_success, reward_info = self.sign(access_token)
         
         # 5. 组合结果消息（通知用）
-        if privacy_mode:
-            account_display = self.account_id
-        else:
-            account_display = f"第{self.index}个账号 ({display_name})"
-        
         final_msg = f"""🌟 阿里云盘签到结果
 
-👤 账号: {account_display}"""
+👤 账号: {user_name}"""
         
-        if display_phone and not privacy_mode:
+        if display_phone:
             final_msg += f"\n📱 手机: {display_phone}"
             
         if total_gb > 0:
@@ -768,8 +751,8 @@ class AliYun:
             else:
                 final_msg += f"\n🔄 Token: 检测到新token，请手动更新"
             
-            # 只在非隐私模式或明确允许时显示token
-            if show_token_in_notification and not privacy_mode:
+            # 只在明确允许时显示token
+            if show_token_in_notification:
                 final_msg += f"\n💡 新token: {mask_sensitive_data(self.new_refresh_token, 'token')}"
 
         final_msg += f"\n⏰ 时间: {datetime.now().strftime('%m-%d %H:%M')}"
@@ -851,10 +834,7 @@ def main():
             
             # 发送单个账号通知
             status = "成功" if is_success else "失败"
-            if privacy_mode:
-                title = f"阿里云盘{aliyun.account_id}签到{status}"
-            else:
-                title = f"阿里云盘账号{index + 1}签到{status}"
+            title = f"阿里云盘账号{index + 1}签到{status}"
             
             notify_user(title, result_msg)
             
@@ -862,12 +842,7 @@ def main():
             error_msg = f"账号{index + 1}: 执行异常 - {str(e)}"
             print(f"❌ {error_msg}")
             
-            if privacy_mode:
-                account_id = generate_account_id(token)
-                title = f"阿里云盘{account_id}签到失败"
-            else:
-                title = f"阿里云盘账号{index + 1}签到失败"
-            
+            title = f"阿里云盘账号{index + 1}签到失败"
             notify_user(title, error_msg)
     
     # 发送汇总通知
@@ -880,8 +855,8 @@ def main():
 📊 成功率: {success_count/total_count*100:.1f}%
 ⏰ 完成时间: {datetime.now().strftime('%m-%d %H:%M')}"""
         
-        # 添加详细结果（在非隐私模式下）
-        if not privacy_mode and len(results) <= 5:  # 最多显示5个账号的详情
+        # 添加详细结果（最多显示5个账号的详情）
+        if len(results) <= 5:
             summary_msg += "\n\n📋 详细结果:"
             for result in results:
                 status_icon = "✅" if result['success'] else "❌"
