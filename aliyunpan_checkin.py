@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 cron: 3 11 * * *
-new Env('什么值得买签到')
+new Env('阿里云盘签到')
 """
 
 import json
