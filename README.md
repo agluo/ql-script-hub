@@ -156,8 +156,6 @@ ql-script-hub/
 3. 找到请求头中的完整 `Cookie` 复制
 4. 确保包含 `BDUSS` 参数
 
-### 🍪 Cookie/Token获取方式
-
 #### 阿里云盘 refresh_token 
 1. 浏览器访问 [阿里云盘网页版](https://www.aliyundrive.com/) 并登录
 2. 按 `F12` 打开开发者工具 → `Application` 标签页
