@@ -299,7 +299,7 @@ class BaiduPan:
 5. 找到任意请求的Request Headers
 6. 复制完整的Cookie值
 7. 在青龙面板中添加环境变量BAIDU_COOKIE
-
+"""
             
             print(f"❌ {error_msg}")
             return error_msg, False
@@ -367,6 +367,7 @@ def main():
 5. 找到任意请求的Request Headers
 6. 复制完整的Cookie值
 7. 在青龙面板中添加环境变量BAIDU_COOKIE
+"""
         
         print(error_msg)
         notify_user("百度网盘签到失败", error_msg)
