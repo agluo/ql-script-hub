@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 """
-cron: 0 8 * * *
+cron: 0 21 * * *
 new Env('ikuuu签到')
 
 原始脚本来源: https://github.com/bighammer-link/jichang_dailycheckin
