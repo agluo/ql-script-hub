@@ -26,9 +26,11 @@ QL Script Hub 是一个专为青龙面板打造的综合性脚本库，提供签
 ql-script-hub/
 ├── README.md              # 项目说明文档
 ├── LICENSE                # 开源许可证
-├── aliyunpan_signin.py    # 阿里云盘签到脚本 
+├── aliyunpan_signin.py    # 阿里云盘签到脚本
+├── baidu_signin.py        # 百度网盘签到
 ├── enshan_checkin.py      # 恩山论坛签到脚本
 ├── nodeseek_checkin.py    # nodeseek签到脚本
+├── ikuuu_checkin.py       # ikuuu签到
 ├── quark_signin.py        # 夸克网盘签到脚本
 ├── SFSU_checkin.py        # 顺丰速运签到脚本
 ├── smzdm_checkin.py       # 什么值得买签到脚本 
@@ -109,6 +111,20 @@ ql-script-hub/
 |--------|------|----------|--------|------|
 | `SMZDM_COOKIE` | 什么值得买Cookie | **必需** | `__ckguid==xxxxx; device_id=xxxxx...` | 完整Cookie，多账号换行分隔 |
 
+#### ☁️ 百度网盘配置
+
+| 变量名 | 说明 | 示例 |
+|--------|------|------|
+| `BAIDU_COOKIE` | 网站Cookie | `BDUSS=xxx; STOKEN=xxx...` |
+| `PRIVACY_MODE` | 隐私模式 | `true` |
+
+#### 📡 ikuuu签到配置
+
+| 变量名 | 说明 | 示例 |
+|--------|------|------|
+| `IKUUU_EMAIL` | 登录邮箱 | `user@example.com` |
+| `IKUUU_PASSWD` | 登录密码 | `password123` |
+
 
 #### ⏰ 随机化配置（所有脚本共用）
 
@@ -167,6 +183,17 @@ ql-script-hub/
 2. 按 `F12` 打开开发者工具 → `Network` 标签页
 3. 刷新页面，找到任意请求的 `Request Headers`
 4. 复制完整的 `Cookie` 值
+
+#### 百度网盘 Cookie 
+1. 访问 [百度网盘](https://pan.baidu.com/) 登录
+2. F12 → Network → 复制Cookie
+
+#### Ikuuu 配置 
+1. 在青龙面板中添加环境变量IKUUU_EMAIL（邮箱地址）
+2. 在青龙面板中添加环境变量IKUUU_PASSWD（对应密码）
+3. 多账号用英文逗号分隔: email1,email2
+4. 密码顺序要与邮箱顺序对应
+
 
 ---
 
