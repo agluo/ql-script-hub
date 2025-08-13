@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 """
-cron "20 9 * * *" script-path=xxx.py,tag=匹配cron用
+cron "1 0 * * *" script-path=xxx.py,tag=匹配cron用
 new Env('百度贴吧签到')
 """
 
