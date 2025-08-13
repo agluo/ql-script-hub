@@ -417,13 +417,13 @@ def main():
     if random_signin:
         delay_seconds = random.randint(0, max_random_delay)
         if delay_seconds > 0:
-            signin_time = datetime.当前() + timedelta(seconds=delay_seconds)
+            signin_time = datetime.now() + timedelta(seconds=delay_seconds)  # 修复：datetime.当前() -> datetime.now()
             print(f"🎲 随机模式: 延迟 {format_time_remaining(delay_seconds)} 后开始")
             print(f"⏰ 预计开始时间: {signin_time.strftime('%H:%M:%S')}")
             wait_with_countdown(delay_seconds, "百度贴吧签到")
     
     # 获取Cookie配置
-    tieba_cookie = os.getenv("TIEBA_COOKIE"， "")
+    tieba_cookie = os.getenv("TIEBA_COOKIE", "")  # 修复：中文逗号 -> 英文逗号
     
     if not tieba_cookie:
         error_msg = "❌ 未找到TIEBA_COOKIE环境变量，请设置百度贴吧Cookie"
@@ -438,7 +438,7 @@ def main():
     all_results = []
     success_accounts = 0
     
-    for index, cookie 在 enumerate(cookies):
+    for index, cookie in enumerate(cookies):  # 修复：在 -> in
         try:
             # 账号间随机等待
             if index > 0:
@@ -452,7 +452,7 @@ def main():
             all_results.append(result)
             
             # 判断是否成功
-            is_success = "签到成功" 在 result 和 "❌" not in result
+            is_success = "签到成功" in result and "❌" not in result  # 修复：在 -> in
             if is_success:
                 success_accounts += 1
             
@@ -473,7 +473,7 @@ def main():
 📊 总计处理: {len(cookies)}个账号
 ✅ 成功账号: {success_accounts}个
 ❌ 失败账号: {len(cookies) - success_accounts}个
-📅 执行时间: {datetime.当前().strftime('%Y-%m-%d %H:%M:%S')}
+📅 执行时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}  
 
 详细结果请查看各账号单独通知"""
         notify_user('百度贴吧签到汇总', summary_msg)
