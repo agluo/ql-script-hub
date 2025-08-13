@@ -81,8 +81,6 @@ class Tieba:
         self.TBS_URL = "http://tieba.baidu.com/dc/common/tbs"
         self.LIKE_URL = "http://c.tieba.baidu.com/c/f/forum/like"
         self.SIGN_URL = "http://c.tieba.baidu.com/c/c/forum/sign"
-        self.LOGIN_INFO_URL = "https://zhidao.baidu.com/api/loginInfo"
-        self.USER_INFO_URL = "https://tieba.baidu.com/mo/q/checkurl"
         self.SIGN_KEY = "tiebaclient!!!"
 
         self.HEADERS = {
@@ -166,56 +164,8 @@ class Tieba:
             
             tbs = result.get("tbs", "")
             
-            # 改进用户名获取逻辑
-            user_name = "贴吧用户"  # 默认用户名
-            
-            # 方法1: 尝试从知道API获取
-            try:
-                user_info = self.request(self.LOGIN_INFO_URL)
-                if user_info.get("userName"):
-                    user_name = user_info["userName"]
-                    print(f"✅ 登录成功，用户: {user_name}")
-                    return tbs, user_name
-            except Exception as e:
-                print(f"知道API获取用户名失败: {e}")
-            
-            # 方法2: 尝试从贴吧主页获取
-            try:
-                main_page = self.session.get("https://tieba.baidu.com/", timeout=10)
-                # 查找用户名的几种可能格式
-                patterns = [
-                    r'"user_name":"([^"]*)"',
-                    r'PageData\.user\.name\s*=\s*"([^"]*)"',
-                    r'un=([^&\s]+)',
-                    r'"name":"([^"]*)".*?"type":"user"'
-                ]
-                
-                for pattern in patterns:
-                    match = re.search(pattern, main_page.text)
-                    if match and match.group(1):
-                        user_name = match.group(1)
-                        if user_name not in ["null", "undefined", ""]:
-                            break
-                        
-            except Exception as e:
-                print(f"主页获取用户名失败: {e}")
-            
-            # 方法3: 尝试从BDUSS解析用户ID（最后的备用方案）
-            if user_name == "贴吧用户":
-                try:
-                    # BDUSS通常包含用户信息，可以尝试解析
-                    import base64
-                    decoded = base64.b64decode(self.bduss + "==")  # 添加padding
-                    decoded_str = decoded.decode('utf-8', errors='ignore')
-                    # 查找可能的用户名模式
-                    name_match = re.search(r'["\']?name["\']?\s*:\s*["\']([^"\']+)["\']', decoded_str)
-                    if name_match:
-                        user_name = name_match.group(1)
-                    else:
-                        # 使用BDUSS前8位作为标识
-                        user_name = f"用户_{self.bduss[:8]}"
-                except Exception:
-                    user_name = f"贴吧账号{self.index}"
+            # 简化用户名逻辑，直接使用默认用户名
+            user_name = f"贴吧账号{self.index}"
             
             print(f"✅ 登录成功，用户: {user_name}")
             return tbs, user_name
@@ -417,13 +367,13 @@ def main():
     if random_signin:
         delay_seconds = random.randint(0, max_random_delay)
         if delay_seconds > 0:
-            signin_time = datetime.now() + timedelta(seconds=delay_seconds)  # 修复：datetime.当前() -> datetime.now()
+            signin_time = datetime.now() + timedelta(seconds=delay_seconds)
             print(f"🎲 随机模式: 延迟 {format_time_remaining(delay_seconds)} 后开始")
             print(f"⏰ 预计开始时间: {signin_time.strftime('%H:%M:%S')}")
             wait_with_countdown(delay_seconds, "百度贴吧签到")
     
     # 获取Cookie配置
-    tieba_cookie = os.getenv("TIEBA_COOKIE", "")  # 修复：中文逗号 -> 英文逗号
+    tieba_cookie = os.getenv("TIEBA_COOKIE", "")
     
     if not tieba_cookie:
         error_msg = "❌ 未找到TIEBA_COOKIE环境变量，请设置百度贴吧Cookie"
@@ -438,7 +388,7 @@ def main():
     all_results = []
     success_accounts = 0
     
-    for index, cookie in enumerate(cookies):  # 修复：在 -> in
+    for index, cookie in enumerate(cookies):
         try:
             # 账号间随机等待
             if index > 0:
@@ -452,7 +402,7 @@ def main():
             all_results.append(result)
             
             # 判断是否成功
-            is_success = "签到成功" in result and "❌" not in result  # 修复：在 -> in
+            is_success = "签到成功" in result and "❌" not in result
             if is_success:
                 success_accounts += 1
             
@@ -473,7 +423,7 @@ def main():
 📊 总计处理: {len(cookies)}个账号
 ✅ 成功账号: {success_accounts}个
 ❌ 失败账号: {len(cookies) - success_accounts}个
-📅 执行时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}  
+📅 执行时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 
 详细结果请查看各账号单独通知"""
         notify_user('百度贴吧签到汇总', summary_msg)
