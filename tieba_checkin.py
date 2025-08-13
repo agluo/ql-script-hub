@@ -305,7 +305,7 @@ class Tieba:
             "error": error_count,
         }
 
-    def main(self) -> str:
+    def main(self) -> tuple[str, bool]:  # 修改返回类型，增加成功状态
         try:
             print(f"\n==== 账号{self.index} 开始签到 ====")
             print(f"🕐 开始时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
@@ -315,7 +315,7 @@ class Tieba:
             if not tbs:
                 error_msg = f"❌ 账号{self.index}: {user_name}"
                 print(error_msg)
-                return error_msg
+                return error_msg, False
             
             # 获取关注的贴吧
             forums = self.get_favorite()
@@ -323,7 +323,7 @@ class Tieba:
             if not forums:
                 error_msg = f"❌ 账号{self.index}: {user_name}\n获取贴吧列表失败，无法完成签到"
                 print(error_msg)
-                return error_msg
+                return error_msg, False
             
             # 开始签到
             start_time = time.time()
@@ -334,6 +334,9 @@ class Tieba:
             # 计算签到效率
             total_actions = stats["success"] + stats["exist"]
             efficiency = f"{total_actions}/{stats['total']}" if stats['total'] > 0 else "0/0"
+            
+            # 判断是否成功：只要没有严重错误就算成功
+            is_success = stats["total"] > 0 and (stats["success"] + stats["exist"]) > 0
             
             # 格式化结果消息
             result_msg = f"""🎯 百度贴吧签到结果
@@ -352,12 +355,12 @@ class Tieba:
             print(result_msg)
             print(f"==== 账号{self.index} 签到完成 ====\n")
             
-            return result_msg
+            return result_msg, is_success
                 
         except Exception as e:
             error_msg = f"❌ 账号{self.index}: 签到异常 - {str(e)}"
             print(error_msg)
-            return error_msg
+            return error_msg, False
 
 def main():
     """主程序入口"""
@@ -398,17 +401,15 @@ def main():
             
             # 执行签到
             tieba = Tieba(cookie, index + 1)
-            result = tieba.main()
-            all_results.append(result)
+            result_msg, is_success = tieba.main()  # 获取成功状态
+            all_results.append(result_msg)
             
-            # 判断是否成功
-            is_success = "签到成功" in result and "❌" not in result
             if is_success:
                 success_accounts += 1
             
-            # 发送单个账号通知
+            # 发送单个账号通知 - 修复判断逻辑
             title = f"百度贴吧账号{index + 1}签到{'成功' if is_success else '失败'}"
-            notify_user(title, result)
+            notify_user(title, result_msg)
             
         except Exception as e:
             error_msg = f"❌ 账号{index + 1}: 初始化失败 - {str(e)}"
