@@ -212,7 +212,7 @@ ql-script-hub/
 #### 天翼云盘配置 
 1. 浏览器访问 [天翼云盘](https://e.dlife.cn/index.do) ，关闭设备锁
 2. 在青龙面板中添加环境变量TY_USERNAME（手机号）
-3. 在青龙面板中添加环境变量IKUUU_PASSWD（对应密码）
+3. 在青龙面板中添加环境变量TY_PASSWD（对应密码）
 
 #### NGA论坛配置
 1. 安装抓包工具并开启 HTTPS 解密，安装并信任证书 Android：HTTP Canary、HttpToolkit、mitmproxy、Charles; iOS：Stream、Charles
