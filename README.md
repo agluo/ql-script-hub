@@ -31,6 +31,8 @@ ql-script-hub/
 ├── enshan_checkin.py      # 恩山论坛签到脚本
 ├── nodeseek_checkin.py    # nodeseek签到脚本
 ├── ikuuu_checkin.py       # ikuuu签到
+├── nga_checkin.py         # NGA论坛签到
+├── ty_netdisk_checkin.py  # 天翼云盘签到
 ├── quark_signin.py        # 夸克网盘签到脚本
 ├── SFSU_checkin.py        # 顺丰速运签到脚本
 ├── smzdm_checkin.py       # 什么值得买签到脚本 
@@ -125,6 +127,19 @@ ql-script-hub/
 | `IKUUU_EMAIL` | 登录邮箱 | `user@example.com` |
 | `IKUUU_PASSWD` | 登录密码 | `password123` |
 
+#### ☁️ 天翼云盘配置
+
+| 变量名 | 说明 | 示例 |
+|--------|------|------|
+| `TY_USERNAME` | 登录手机号 | `13812345678&13987654321` |
+| `TY_PASSWORD` | 登录密码 | `password1&password2` |
+
+#### 🎮 NGA论坛配置
+
+| 变量名 | 说明 | 示例 |
+|--------|------|------|
+| `NGA_CREDENTIALS` | UID,AccessToken | `12345678,abcdef...` |
+
 
 #### ⏰ 随机化配置（所有脚本共用）
 
@@ -194,6 +209,20 @@ ql-script-hub/
 3. 多账号用英文逗号分隔: email1,email2
 4. 密码顺序要与邮箱顺序对应
 
+#### 天翼云盘配置 
+1. 浏览器访问 [天翼云盘](https://e.dlife.cn/index.do) ，关闭设备锁
+2. 在青龙面板中添加环境变量TY_USERNAME（手机号）
+3. 在青龙面板中添加环境变量IKUUU_PASSWD（对应密码）
+
+#### NGA论坛配置
+1. 安装抓包工具并开启 HTTPS 解密，安装并信任证书 Android：HTTP Canary、HttpToolkit、mitmproxy、Charles; iOS：Stream、Charles
+2. 将手机的网络代理指向抓包工具（或使用工具的本机 VPN/代理模式）
+3. 打开 NGA 官方 App，确保已登录；在 App 内随便执行一个操作（进入首页/签到等）触发请求
+4. 在抓包记录中找到对以下地址的 POST 请求： https://ngabbs.com/nuke.php
+5. 打开该请求的请求体（Content-Type 一般是 application/x-www-form-urlencoded），复制以下参数的值：access_uid=你的UID;access_token=一串长字符串
+7. 将上述两者按“UID,AccessToken”格式填写为环境变量 NGA_CREDENTIALS
+   单账号示例：123456,abcdefg
+   多账号用 & 分隔：123456,abcdefg&234567,hijklmn
 
 ---
 
