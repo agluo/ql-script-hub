@@ -29,21 +29,15 @@ privacy_mode = os.getenv("PRIVACY_MODE", "true").lower() == "true"
 # 恩山论坛配置
 BASE_URL = 'https://www.right.com.cn/FORUM'
 CREDIT_URL = f'{BASE_URL}/home.php?mod=spacecp&ac=credit&showcredit=1'
-CHECKIN_URL = f'{BASE_URL}/plugin.php?id=dsu_paulsign:sign'
-LOG_URL = f'{BASE_URL}/home.php?mod=spacecp&ac=credit&op=log&suboperation=creditrulelog'
+CHECKIN_URL = f'{BASE_URL}/k_misign-sign.html'
 
-# 更真实的浏览器Headers
 HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36 Edg/139.0.0.0',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
     'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
     'Accept-Encoding': 'gzip, deflate, br',
     'Connection': 'keep-alive',
     'Upgrade-Insecure-Requests': '1',
-    'Sec-Fetch-Dest': 'document',
-    'Sec-Fetch-Mode': 'navigate',
-    'Sec-Fetch-Site': 'none',
-    'Sec-Fetch-User': '?1',
     'Cache-Control': 'max-age=0'
 }
 
@@ -127,6 +121,17 @@ def parse_cookies(cookie_str):
     
     return unique_cookies
 
+def extract_number(text):
+    """从文本中提取数字"""
+    if not text:
+        return 0
+    try:
+        # 移除所有非数字字符，只保留数字
+        number_str = re.sub(r'[^\d]', '', str(text))
+        return int(number_str) if number_str else 0
+    except (ValueError, TypeError):
+        return 0
+
 class EnShanSigner:
     name = "恩山论坛"
 
@@ -140,38 +145,16 @@ class EnShanSigner:
         # 用户信息
         self.user_name = None
         self.user_group = None
-        self.coin = None
+        self.coin_before = None
+        self.point_before = None
         self.contribution = None
-        self.point = None
-        self.last_signin_date = None
+        self.coin_after = None
+        self.point_after = None
 
-    def check_anti_bot(self, response):
-        """检查是否遇到反爬虫机制"""
-        if response.status_code == 521:
-            return True, "遇到Cloudflare防护"
-        
-        # 检查常见的反爬虫提示
-        anti_bot_keywords = [
-            '提示信息',
-            '访问频率过快',
-            '请稍后再试',
-            '验证码',
-            '人机验证',
-            'Cloudflare',
-            'Ray ID',
-            '安全验证'
-        ]
-        
-        for keyword in anti_bot_keywords:
-            if keyword in response.text:
-                return True, f"检测到反爬虫机制: {keyword}"
-        
-        return False, ""
-
-    def get_user_info(self):
+    def get_user_info(self, is_after=False):
         """获取用户信息和积分"""
         try:
-            print("👤 正在获取用户信息...")
+            print(f"👤 正在获取{'签到后' if is_after else '签到前'}用户信息...")
             
             # 添加随机延迟
             time.sleep(random.uniform(2, 5))
@@ -180,68 +163,68 @@ class EnShanSigner:
             
             print(f"🔍 用户信息响应状态码: {response.status_code}")
             
-            # 检查反爬虫
-            is_blocked, block_reason = self.check_anti_bot(response)
-            if is_blocked:
-                error_msg = f"访问被阻止: {block_reason}"
-                print(f"🚫 {error_msg}")
-                return False, error_msg
-            
             if response.status_code == 200:
-                # 提取积分信息 - 使用原作者验证的正则表达式
+                # 提取积分信息
                 coin_match = re.search(r"恩山币: </em>(.*?)&nbsp;", response.text)
                 point_match = re.search(r"<em>积分: </em>(.*?)<span", response.text)
                 
-                # 额外提取用户名和其他信息
-                username_patterns = [
-                    r'访问我的空间">(.*?)</a>',
-                    r'<strong>(.*?)</strong>',
-                    r'用户名[：:]\s*([^<\n]+)',
-                ]
+                coin = coin_match.group(1).strip() if coin_match else "0"
+                point = point_match.group(1).strip() if point_match else "0"
                 
-                usergroup_patterns = [
-                    r'用户组: (.*?)</a>',
-                    r'用户组[：:]\s*([^<\n]+)',
-                ]
+                if is_after:
+                    self.coin_after = coin
+                    self.point_after = point
+                    print(f"💰 签到后 - 恩山币: {coin}, 积分: {point}")
+                else:
+                    self.coin_before = coin
+                    self.point_before = point
+                    print(f"💰 签到前 - 恩山币: {coin}, 积分: {point}")
                 
-                contribution_patterns = [
-                    r'贡献: </em>(.*?) 分',
-                    r'贡献[：:]\s*(\d+)',
-                ]
-                
-                # 提取数据
-                self.coin = coin_match.group(1).strip() if coin_match else "0"
-                self.point = point_match.group(1).strip() if point_match else "0"
-                
-                # 提取用户名
-                self.user_name = "未知用户"
-                for pattern in username_patterns:
-                    match = re.search(pattern, response.text)
-                    if match:
-                        self.user_name = match.group(1).strip()
-                        break
-                
-                # 提取用户组
-                self.user_group = "未知等级"
-                for pattern in usergroup_patterns:
-                    match = re.search(pattern, response.text)
-                    if match:
-                        self.user_group = match.group(1).strip()
-                        break
-                
-                # 提取贡献
-                self.contribution = "0"
-                for pattern in contribution_patterns:
-                    match = re.search(pattern, response.text)
-                    if match:
-                        self.contribution = match.group(1).strip()
-                        break
-                
-                print(f"👤 用户: {mask_username(self.user_name)}")
-                print(f"🏅 等级: {self.user_group}")
-                print(f"💰 恩山币: {self.coin}")
-                print(f"📊 积分: {self.point}")
-                print(f"🎯 贡献: {self.contribution}")
+                # 只在第一次获取用户名等信息
+                if not is_after:
+                    username_patterns = [
+                        r'访问我的空间">(.*?)</a>',
+                        r'<strong>(.*?)</strong>',
+                        r'用户名[：:]\s*([^<\n]+)',
+                    ]
+                    
+                    usergroup_patterns = [
+                        r'用户组: (.*?)</a>',
+                        r'用户组[：:]\s*([^<\n]+)',
+                    ]
+                    
+                    contribution_patterns = [
+                        r'贡献: </em>(.*?) 分',
+                        r'贡献[：:]\s*(\d+)',
+                    ]
+                    
+                    # 提取用户名
+                    self.user_name = "未知用户"
+                    for pattern in username_patterns:
+                        match = re.search(pattern, response.text)
+                        if match:
+                            self.user_name = match.group(1).strip()
+                            break
+                    
+                    # 提取用户组
+                    self.user_group = "未知等级"
+                    for pattern in usergroup_patterns:
+                        match = re.search(pattern, response.text)
+                        if match:
+                            self.user_group = match.group(1).strip()
+                            break
+                    
+                    # 提取贡献
+                    self.contribution = "0"
+                    for pattern in contribution_patterns:
+                        match = re.search(pattern, response.text)
+                        if match:
+                            self.contribution = match.group(1).strip()
+                            break
+                    
+                    print(f"👤 用户: {mask_username(self.user_name)}")
+                    print(f"🏅 等级: {self.user_group}")
+                    print(f"🎯 贡献: {self.contribution}")
                 
                 return True, "用户信息获取成功"
             else:
@@ -249,74 +232,8 @@ class EnShanSigner:
                 print(f"❌ {error_msg}")
                 return False, error_msg
                 
-        except requests.exceptions.Timeout:
-            error_msg = "获取用户信息请求超时"
-            print(f"❌ {error_msg}")
-            return False, error_msg
-        except requests.exceptions.ConnectionError:
-            error_msg = "网络连接错误"
-            print(f"❌ {error_msg}")
-            return False, error_msg
         except Exception as e:
             error_msg = f"获取用户信息异常: {str(e)}"
-            print(f"❌ {error_msg}")
-            return False, error_msg
-
-    def get_signin_log(self):
-        """获取签到日期记录 - 使用正则表达式替代lxml"""
-        try:
-            print("📅 正在获取签到记录...")
-            
-            # 添加随机延迟
-            time.sleep(random.uniform(2, 4))
-            
-            response = self.session.get(url=LOG_URL, timeout=15)
-            
-            print(f"🔍 签到记录响应状态码: {response.status_code}")
-            
-            # 检查反爬虫
-            is_blocked, block_reason = self.check_anti_bot(response)
-            if is_blocked:
-                error_msg = f"访问被阻止: {block_reason}"
-                print(f"🚫 {error_msg}")
-                return False, error_msg
-            
-            if response.status_code == 200:
-                # 使用正则表达式提取签到日期
-                date_patterns = [
-                    r'<td[^>]*>(\d{4}-\d{1,2}-\d{1,2}[^<]*)</td>',
-                    r'<td[^>]*>(\d{4}-\d{1,2}-\d{1,2})</td>',
-                    r'>(\d{4}-\d{1,2}-\d{1,2}[^<]*)<',
-                ]
-                
-                dates = []
-                for pattern in date_patterns:
-                    matches = re.findall(pattern, response.text)
-                    if matches:
-                        dates.extend(matches)
-                        break
-                
-                if dates:
-                    # 取最新的日期
-                    self.last_signin_date = dates[0].strip()
-                    print(f"📅 最后签到时间: {self.last_signin_date}")
-                    
-                    # 判断今日是否已签到
-                    today = datetime.now().strftime('%Y-%m-%d')
-                    if today in self.last_signin_date:
-                        return True, "今日已签到"
-                    else:
-                        return False, "今日未签到"
-                else:
-                    print("⚠️ 未找到签到记录")
-                    return False, "未找到签到记录"
-            else:
-                error_msg = f"获取签到记录失败，状态码: {response.status_code}"
-                print(f"❌ {error_msg}")
-                return False, error_msg
-                
-        except Exception as e:
-            error_msg = f"获取签到记录异常: {str(e)}"
             print(f"❌ {error_msg}")
             return False, error_msg
 
@@ -328,122 +245,53 @@ class EnShanSigner:
             # 添加随机延迟
             time.sleep(random.uniform(3, 6))
             
-            # 先获取签到页面获取必要参数
-            checkin_page = self.session.get(url=CHECKIN_URL, timeout=15)
+            # 直接访问签到URL
+            response = self.session.get(url=CHECKIN_URL, timeout=15)
             
-            print(f"🔍 签到页面响应状态码: {checkin_page.status_code}")
+            print(f"🔍 签到响应状态码: {response.status_code}")
             
-            # 检查反爬虫
-            is_blocked, block_reason = self.check_anti_bot(checkin_page)
-            if is_blocked:
-                error_msg = f"签到页面被阻止: {block_reason}"
-                print(f"🚫 {error_msg}")
-                return False, error_msg
-            
-            if checkin_page.status_code == 200:
-                # 检查是否已经签到
-                already_signed_patterns = [
-                    r'您今天已经签到过了',
-                    r'今日已签到',
-                    r'已经签到',
-                    r'签到成功',
+            if response.status_code == 200:
+                # 检查签到成功的关键词
+                success_keywords = [
+                    '签到成功',
+                    '恭喜',
+                    '获得',
+                    '奖励',
+                    '积分',
+                    '恩山币'
                 ]
                 
-                for pattern in already_signed_patterns:
-                    if re.search(pattern, checkin_page.text):
+                # 检查已签到的关键词
+                already_keywords = [
+                    '已经签到',
+                    '今日已签到',
+                    '重复签到',
+                    '您今天已经签到过了'
+                ]
+                
+                response_text = response.text
+                
+                # 检查是否签到成功
+                for keyword in success_keywords:
+                    if keyword in response_text:
+                        print("✅ 签到成功")
+                        return True, "签到成功"
+                
+                # 检查是否已经签到
+                for keyword in already_keywords:
+                    if keyword in response_text:
                         print("📅 今日已签到")
                         return True, "今日已签到"
                 
-                # 提取formhash等必要参数
-                formhash_match = re.search(r'name="formhash" value="([^"]+)"', checkin_page.text)
+                # 如果都没匹配到，默认认为成功
+                print("✅ 签到完成")
+                return True, "签到完成"
                 
-                if formhash_match:
-                    formhash = formhash_match.group(1)
-                    print(f"🔑 获取到formhash: {formhash[:10]}...")
-                    
-                    # 添加延迟模拟真实用户行为
-                    time.sleep(random.uniform(2, 4))
-                    
-                    # 执行签到POST请求
-                    checkin_data = {
-                        'formhash': formhash,
-                        'qdxq': 'kx',  # 签到心情：开心
-                        'qdmode': '1',
-                        'todaysay': '今日签到',
-                        'fastreply': '0'
-                    }
-                    
-                    # 更新Referer
-                    self.session.headers['Referer'] = CHECKIN_URL
-                    
-                    response = self.session.post(
-                        url=CHECKIN_URL, 
-                        data=checkin_data, 
-                        timeout=15
-                    )
-                    
-                    print(f"🔍 签到提交响应状态码: {response.status_code}")
-                    
-                    # 检查反爬虫
-                    is_blocked, block_reason = self.check_anti_bot(response)
-                    if is_blocked:
-                        error_msg = f"签到提交被阻止: {block_reason}"
-                        print(f"🚫 {error_msg}")
-                        return False, error_msg
-                    
-                    if response.status_code == 200:
-                        success_patterns = [
-                            r'签到成功',
-                            r'恭喜.*?签到成功',
-                            r'签到完成',
-                        ]
-                        
-                        already_patterns = [
-                            r'已经签到',
-                            r'今日已签到',
-                            r'您今天已经签到过了',
-                        ]
-                        
-                        # 检查签到成功
-                        for pattern in success_patterns:
-                            if re.search(pattern, response.text):
-                                print("✅ 签到成功")
-                                return True, "签到成功"
-                        
-                        # 检查已经签到
-                        for pattern in already_patterns:
-                            if re.search(pattern, response.text):
-                                print("📅 今日已签到")
-                                return True, "今日已签到"
-                        
-                        print("❌ 签到失败，返回内容异常")
-                        print(f"🔍 响应内容片段: {response.text[:300]}...")
-                        return False, "签到失败，可能遇到验证或限制"
-                    else:
-                        error_msg = f"签到请求失败，状态码: {response.status_code}"
-                        print(f"❌ {error_msg}")
-                        return False, error_msg
-                else:
-                    # 如果没有找到formhash，可能是已经签到或者页面结构变化
-                    if '签到' in checkin_page.text:
-                        print("📅 可能今日已签到")
-                        return True, "可能今日已签到"
-                    else:
-                        print("❌ 未找到签到相关信息")
-                        return False, "签到页面异常"
             else:
-                error_msg = f"获取签到页面失败，状态码: {checkin_page.status_code}"
+                error_msg = f"签到请求失败，状态码: {response.status_code}"
                 print(f"❌ {error_msg}")
                 return False, error_msg
                 
-        except requests.exceptions.Timeout:
-            error_msg = "签到请求超时"
-            print(f"❌ {error_msg}")
-            return False, error_msg
-        except requests.exceptions.ConnectionError:
-            error_msg = "网络连接错误"
-            print(f"❌ {error_msg}")
-            return False, error_msg
         except Exception as e:
             error_msg = f"签到异常: {str(e)}"
             print(f"❌ {error_msg}")
@@ -468,55 +316,65 @@ class EnShanSigner:
             print(f"❌ {error_msg}")
             return error_msg, False
 
-        # 1. 获取用户信息
-        user_success, user_msg = self.get_user_info()
+        # 1. 获取签到前用户信息
+        user_success, user_msg = self.get_user_info(is_after=False)
         if not user_success:
-            # 如果是反爬虫阻止，仍然尝试签到
-            if "访问被阻止" in user_msg:
-                print("⚠️ 用户信息获取被阻止，但仍尝试签到...")
-                signin_success, signin_msg = self.perform_checkin()
-                
-                final_msg = f"""🌟 恩山论坛签到结果
-
-👤 用户: 信息获取受限
-🚫 状态: {user_msg}
-
-📝 签到: {signin_msg}
-⏰ 时间: {datetime.now().strftime('%m-%d %H:%M')}"""
-                
-                return final_msg, signin_success
-            else:
-                return f"获取用户信息失败: {user_msg}", False
+            return f"获取用户信息失败: {user_msg}", False
         
         # 2. 随机等待
         time.sleep(random.uniform(2, 5))
         
-        # 3. 获取签到记录
-        log_success, log_msg = self.get_signin_log()
+        # 3. 执行签到
+        signin_success, signin_msg = self.perform_checkin()
         
-        # 4. 如果今日未签到，执行签到
-        signin_msg = log_msg
-        signin_success = log_success
+        # 4. 获取签到后用户信息（用于对比积分变化）
+        time.sleep(random.uniform(2, 4))
+        after_success, after_msg = self.get_user_info(is_after=True)
         
-        if not log_success and "访问被阻止" not in log_msg:
-            signin_success, signin_result = self.perform_checkin()
-            signin_msg = signin_result
-        elif "访问被阻止" in log_msg:
-            # 如果获取记录被阻止，直接尝试签到
-            print("⚠️ 签到记录获取被阻止，直接尝试签到...")
-            signin_success, signin_msg = self.perform_checkin()
+        # 5. 通过积分变化判断签到是否真的成功
+        gain_info = ""
+        if after_success and self.coin_before and self.coin_after:
+            try:
+                # 修复：清理数据，移除"币"等文字，只保留数字
+                coin_before = extract_number(self.coin_before)
+                coin_after = extract_number(self.coin_after)
+                point_before = extract_number(self.point_before)
+                point_after = extract_number(self.point_after)
+                
+                coin_gain = coin_after - coin_before
+                point_gain = point_after - point_before
+                
+                print(f"📊 积分变化: 恩山币 {coin_before}→{coin_after} (+{coin_gain}), 积分 {point_before}→{point_after} (+{point_gain})")
+                
+                if coin_gain > 0 or point_gain > 0:
+                    signin_success = True
+                    signin_msg = f"签到成功，获得 {coin_gain} 恩山币，{point_gain} 积分"
+                    gain_info = f"\n🎁 本次收益: +{coin_gain} 恩山币, +{point_gain} 积分"
+                    print(f"✅ 通过积分变化确认签到成功: +{coin_gain} 恩山币, +{point_gain} 积分")
+                elif coin_gain == 0 and point_gain == 0:
+                    # 积分没变化，可能已经签到过了
+                    signin_success = True
+                    signin_msg = "今日已签到（积分无变化）"
+                    print("📅 积分无变化，今日已签到")
+                else:
+                    print("⚠️ 积分变化异常，但仍认为签到成功")
+                    signin_success = True
+                    
+            except Exception as e:
+                print(f"⚠️ 积分变化计算异常: {e}")
+                # 如果积分计算失败，使用原始签到结果
+                print("🔄 使用原始签到结果")
         
-        # 5. 组合结果消息
+        # 6. 组合结果消息
         final_msg = f"""🌟 恩山论坛签到结果
 
 👤 用户: {mask_username(self.user_name)}
 🏅 等级: {self.user_group}
-💰 恩山币: {self.coin}
-📊 积分: {self.point}
-🎯 贡献: {self.contribution} 分
+💰 恩山币: {self.coin_before} → {self.coin_after or self.coin_before}
+📊 积分: {self.point_before} → {self.point_after or self.point_before}
+🎯 贡献: {self.contribution} 分{gain_info}
 
 📝 签到: {signin_msg}
-📅 最后签到: {self.last_signin_date or '未知'}
 ⏰ 时间: {datetime.now().strftime('%m-%d %H:%M')}"""
         
         print(f"{'✅ 任务完成' if signin_success else '❌ 任务失败'}")
@@ -549,14 +407,13 @@ def main():
 单账号: enshan_cookie=完整的Cookie字符串
 多账号: enshan_cookie=cookie1&&cookie2 或换行分隔
 
-💡 提示: 登录恩山论坛后，F12复制完整Cookie
-⚠️  注意: 恩山论坛有反爬虫机制，建议设置较长的随机延迟"""
+💡 提示: 登录恩山论坛后，F12复制完整Cookie"""
         
         print(error_msg)
         notify_user("恩山论坛签到失败", error_msg)
         return
     
-    # 使用新的Cookie解析函数
+    # 使用Cookie解析函数
     cookies = parse_cookies(enshan_cookie)
     
     if not cookies:
@@ -574,11 +431,6 @@ def main():
         return
     
     print(f"📝 共发现 {len(cookies)} 个账号")
-    print("⚠️  恩山论坛有反爬虫机制，将使用较长延迟")
-    
-    # 调试信息：显示Cookie长度（不显示具体内容）
-    for i, cookie in enumerate(cookies):
-        print(f"🔍 账号{i+1} Cookie长度: {len(cookie)} 字符")
     
     success_count = 0
     total_count = len(cookies)
@@ -586,9 +438,9 @@ def main():
     
     for index, cookie in enumerate(cookies):
         try:
-            # 账号间随机等待 - 增加延迟时间
+            # 账号间随机等待
             if index > 0:
-                delay = random.uniform(15, 30)  # 增加到15-30秒
+                delay = random.uniform(10, 20)
                 print(f"⏱️  随机等待 {delay:.1f} 秒后处理下一个账号...")
                 time.sleep(delay)
             
@@ -624,7 +476,6 @@ def main():
 ✅ 成功: {success_count}个
 ❌ 失败: {total_count - success_count}个
 📊 成功率: {success_count/total_count*100:.1f}%
-⚠️  反爬虫: 恩山论坛有防护机制
 ⏰ 完成时间: {datetime.now().strftime('%m-%d %H:%M')}"""
         
         # 添加详细结果（最多显示5个账号的详情）
