@@ -111,7 +111,7 @@ class RUN:
         self.headers = {
             'Host': 'mcs-mimp-web.sf-express.com',
             'upgrade-insecure-requests': '1',
-            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36 NetType/WIFI MicroMessenger/7.0.20.1781(0x6700143B) WindowsWechat(0x63090551) XWEB/6945 Flue',
+            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36 NetType/WIFI MicroMessenger/7.0.20.1781(0x6700143B) WindowsWechat(0x6309092b) XWEB/6763 Flue',
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'sec-fetch-site': 'none',
             'sec-fetch-mode': 'navigate',
@@ -211,23 +211,6 @@ class RUN:
                 Log(f'📝 今日已签到，本周累计签到【{count_day + 1}】天')
         else:
             Log(f'❌ 签到失败！原因：{response.get("errorMessage", "未知错误")}')
-
-    def superWelfare_receiveRedPacket(self):
-        """领取超值福利签到奖励"""
-        Log('🎁 超值福利签到')
-        json_data = {"channel": "czflqdlhbxcx"}
-        url = 'https://mcs-mimp-web.sf-express.com/mcs-mimp/commonPost/~memberActLengthy~redPacketActivityService~superWelfare~receiveRedPacket'
-        response = self.do_request(url, data=json_data)
-        if response.get('success'):
-            gift_list = response.get('obj', {}).get('giftList', [])
-            if response.get('obj', {}).get('extraGiftList', []):
-                gift_list.extend(response['obj']['extraGiftList'])
-            gift_names = ', '.join([gift['giftName'] for gift in gift_list]) or '无奖励'
-            receive_status = response.get('obj', {}).get('receiveStatus')
-            status_message = '领取成功' if receive_status == 1 else '已领取过'
-            Log(f'🎉 超值福利签到[{status_message}]: {gift_names}')
-        else:
-            Log(f'❌ 超值福利签到失败: {response.get("errorMessage", "未知错误")}')
 
     def get_SignTaskList(self, end=False):
         """获取签到任务列表"""
@@ -477,7 +460,8 @@ class RUN:
                     self.member_day_fetch_mix_task_reward(task)
                 elif task['status'] == 2 and task['taskType'] not in [
                     'SEND_SUCCESS', 'INVITEFRIENDS_PARTAKE_ACTIVITY', 'OPEN_SVIP',
-                    'OPEN_NEW_EXPRESS_CARD', 'OPEN_FAMILY_CARD', 'CHARGE_NEW_EXPRESS_CARD', 'INTEGRAL_EXCHANGE'
+                    'OPEN_NEW_EXPRESS_CARD', 'OPEN_FAMILY_CARD', 'CHARGE_NEW_EXPRESS_CARD', 
+                    'INTEGRAL_EXCHANGE', 'OPEN_SUPER_CARD'  # 添加购买至尊会员到跳过列表
                 ]:
                     for _ in range(task['restFinishTime']):
                         if self.member_day_black:
@@ -491,26 +475,59 @@ class RUN:
                 Log('📝 会员日任务风控')
 
     def member_day_finish_task(self, task):
-        """完成会员日任务"""
-        payload = {'taskCode': task['taskCode']}
+        """完成会员日任务 - 修复版本"""
+        task_name = task.get("taskName", "未知任务")
+        task_type = task.get("taskType", "")
+        
+        # 检查任务是否应该被跳过
+        skip_task_types = [
+            'SEND_SUCCESS', 'INVITEFRIENDS_PARTAKE_ACTIVITY', 'OPEN_SVIP',
+            'OPEN_NEW_EXPRESS_CARD', 'OPEN_FAMILY_CARD', 'CHARGE_NEW_EXPRESS_CARD', 
+            'INTEGRAL_EXCHANGE', 'OPEN_SUPER_CARD'
+        ]
+        
+        if task_type in skip_task_types:
+            Log(f'⏭️ 会员日任务[{task_name}]-跳过执行（{task_type}）')
+            return
+        
+        # 智能获取任务代码
+        task_code = None
+        if 'taskCode' in task:
+            task_code = task['taskCode']
+        elif 'taskType' in task:
+            task_code = task['taskType']  # 某些任务使用taskType作为taskCode
+        else:
+            Log(f'📝 任务[{task_name}]缺少必要字段，跳过执行')
+            Log(f'📝 任务详情: {json.dumps(task, ensure_ascii=False, indent=2)}')
+            return
+        
+        # 执行任务
+        payload = {'taskCode': task_code}
         url = 'https://mcs-mimp-web.sf-express.com/mcs-mimp/commonPost/~memberEs~taskRecord~finishTask'
         response = self.do_request(url, data=payload)
+        
         if response.get('success'):
-            Log(f'📝 完成会员日任务[{task["taskName"]}]: 成功')
+            Log(f'📝 完成会员日任务[{task_name}]: 成功')
             self.member_day_fetch_mix_task_reward(task)
         else:
             error_message = response.get('errorMessage', '无返回')
-            Log(f'📝 完成会员日任务[{task["taskName"]}]: {error_message}')
+            Log(f'📝 完成会员日任务[{task_name}]: {error_message}')
             if '没有资格参与活动' in error_message:
                 self.member_day_black = True
                 Log('📝 会员日任务风控')
 
     def member_day_fetch_mix_task_reward(self, task):
         """领取会员日任务奖励"""
+        task_name = task.get("taskName", "未知任务")
         payload = {'taskType': task['taskType'], 'activityCode': 'MEMBER_DAY', 'channelType': 'MINI_PROGRAM'}
         url = 'https://mcs-mimp-web.sf-express.com/mcs-mimp/commonPost/~memberNonactivity~activityTaskService~fetchMixTaskReward'
         response = self.do_request(url, data=payload)
-        Log(f'🎁 领取会员日任务[{task["taskName"]}]: {"成功" if response.get("success") else response.get("errorMessage", "失败")}')
+        
+        if response.get('success'):
+            Log(f'🎁 领取会员日任务[{task_name}]: 成功')
+        else:
+            error_message = response.get('errorMessage', '失败')
+            Log(f'🎁 领取会员日任务[{task_name}]: {error_message}')
 
     def member_day_receive_red_packet(self, hour):
         """领取会员日红包"""
@@ -578,7 +595,8 @@ class RUN:
 
         # 执行签到任务
         self.sign()
-        self.superWelfare_receiveRedPacket()
+        # 注释掉超值福利签到（经常失败，影响体验）
+        # self.superWelfare_receiveRedPacket()
         self.get_SignTaskList()
         self.get_SignTaskList(True)
 
