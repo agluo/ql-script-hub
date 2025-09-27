@@ -35,7 +35,8 @@ ql-script-hub/
 ├── ty_netdisk_checkin.py  # 天翼云盘签到
 ├── quark_signin.py        # 夸克网盘签到脚本
 ├── SFSU_checkin.py        # 顺丰速运签到脚本
-├── smzdm_checkin.py       # 什么值得买签到脚本 
+├── smzdm_checkin.py       # 什么值得买签到脚本
+├── deepflood_checkin.py   #deepflood签到脚本
 └── tieba_checkin.py       # 贴吧签到脚本
 ```
 
@@ -140,6 +141,13 @@ ql-script-hub/
 |--------|------|------|
 | `NGA_CREDENTIALS` | UID,AccessToken | `12345678,abcdef...` |
 
+#### 📱 deepflood签到配置
+
+| 变量名 | 说明 | 是否必需 | 示例值 | 备注 |
+|--------|------|----------|--------|------|
+| `DEEPFLOOD_COOKIE` | NodeSeek网站Cookie | **必需** | `cookie1&cookie2&cookie3` | 多账号用`&`分隔 |
+| `NS_RANDOM` | 签到随机参数 | 可选 | `true` | 默认值，通常无需修改 |
+
 
 #### ⏰ 随机化配置（所有脚本共用）
 
@@ -166,6 +174,11 @@ ql-script-hub/
 
 #### NodeSeek Cookie
 1. 浏览器访问 [nodeseek.com](https://www.nodeseek.com) 并登录
+2. F12 开发者工具 → Network → 刷新页面
+3. 找到请求头中的 `Cookie` 完整复制
+
+#### Deepflood Cookie
+1. 浏览器访问 [nodeseek.com](https://www.deepflood.com) 并登录
 2. F12 开发者工具 → Network → 刷新页面
 3. 找到请求头中的 `Cookie` 完整复制
 
