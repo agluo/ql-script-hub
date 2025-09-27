@@ -36,7 +36,7 @@ ql-script-hub/
 ├── quark_signin.py        # 夸克网盘签到脚本
 ├── SFSU_checkin.py        # 顺丰速运签到脚本
 ├── smzdm_checkin.py       # 什么值得买签到脚本
-├── deepflood_checkin.py   #deepflood签到脚本
+├── deepflood_checkin.py   # deepflood签到脚本
 └── tieba_checkin.py       # 贴吧签到脚本
 ```
 
