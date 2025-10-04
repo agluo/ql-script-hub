@@ -37,6 +37,7 @@ ql-script-hub/
 ├── SFSU_checkin.py        # 顺丰速运签到脚本
 ├── smzdm_checkin.py       # 什么值得买签到脚本
 ├── deepflood_checkin.py   # deepflood签到脚本
+├── leaflow_checkin.py     # leaflow签到脚本
 └── tieba_checkin.py       # 贴吧签到脚本
 ```
 
@@ -148,6 +149,12 @@ ql-script-hub/
 | `DEEPFLOOD_COOKIE` | NodeSeek网站Cookie | **必需** | `cookie1&cookie2&cookie3` | 多账号用`&`分隔 |
 | `NS_RANDOM` | 签到随机参数 | 可选 | `true` | 默认值，通常无需修改 |
 
+#### ☁ leaflow签到配置
+
+| 变量名 | 说明 | 是否必需 | 示例值 | 备注 |
+|--------|------|----------|--------|------|
+| `LEAFLOW_COOKIE` | leaflow网站Cookie | **必需** | `cookie` | 多账号用`&`分隔 |
+
 
 #### ⏰ 随机化配置（所有脚本共用）
 
@@ -226,6 +233,14 @@ ql-script-hub/
 1. 浏览器访问 [天翼云盘](https://e.dlife.cn/index.do) ，关闭设备锁
 2. 在青龙面板中添加环境变量TY_USERNAME（手机号）
 3. 在青龙面板中添加环境变量TY_PASSWD（对应密码）
+
+#### leaflow配置 
+1. 浏览器访问 [leaflow](https://leaflow.net/workspaces) ，关闭设备锁
+2. 点击签到试用
+3. 在新弹出来的页面中按F12 网络
+4. 点击签到
+5. 观察F12 网络中新出现的链接
+6. 在新出现的请求中找到cookie值为PHPSESSID=XXXXX的一串
 
 #### NGA论坛配置
 1. 安装抓包工具并开启 HTTPS 解密，安装并信任证书 Android：HTTP Canary、HttpToolkit、mitmproxy、Charles; iOS：Stream、Charles
