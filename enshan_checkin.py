@@ -173,7 +173,7 @@ class RightForumSigner:
             else:
                 return False, "未找到formhash参数"
 
-            # 修复：使用非固定宽度的look-behind替代方案
+            # 获取uid
             uid_match = re.search(r"discuz_uid\s*=\s*'(\d+)'", response.text)
             if uid_match:
                 self.uid = uid_match.group(1)
@@ -262,7 +262,7 @@ class RightForumSigner:
             return False, f"获取用户信息异常: {str(e)}"
 
     def perform_checkin(self):
-        """执行签到 - 改进版状态判断"""
+        """执行签到"""
         try:
             print("📝 正在执行签到...")
 
