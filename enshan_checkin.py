@@ -1,4 +1,4 @@
-"""
+*"""
 cron "39 12 * * *" script-path=xxx.py,tag=匹配cron用
 new Env('恩山论坛签到')
 """
@@ -25,6 +25,21 @@ enshan_cookie = os.environ.get('enshan_cookie', '')
 max_random_delay = int(os.getenv("MAX_RANDOM_DELAY", "3600"))
 random_signin = os.getenv("RANDOM_SIGNIN", "true").lower() == "true"
 privacy_mode = os.getenv("PRIVACY_MODE", "true").lower() == "true"
+
+# 恩山论坛
+BASE_URL = 'https://www.right.com.cn/FORUM'
+CREDIT_URL = f'{BASE_URL}/home.php?mod=spacecp&ac=credit&showcredit=1'
+CHECKIN_URL = f'{BASE_URL}/k_misign-sign.html'
+
+HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+    'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+    'Accept-Encoding': 'gzip, deflate, br',
+    'Connection': 'keep-alive',
+    'Upgrade-Insecure-Requests': '1',
+    'Cache-Control': 'max-age=0'
+}
 
 def mask_username(username):
     """用户名脱敏处理"""
@@ -117,32 +132,22 @@ def extract_number(text):
     except (ValueError, TypeError):
         return 0
 
-class RightForumSigner:
+class EnShanSigner:
     name = "恩山论坛"
 
     def __init__(self, cookie: str, index: int = 1):
         self.cookie = cookie
         self.index = index
         self.session = requests.Session()
-
-        # 基础headers
-        self.base_headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-            "Accept-Language": "zh-CN,zh;q=0.9",
-            "Accept-Encoding": "gzip, deflate, br",
-            "DNT": "1",
-            "Connection": "keep-alive"
-        }
-        self.session.headers.update(self.base_headers)
+        self.session.headers.update(HEADERS)
         self.session.headers['Cookie'] = cookie
 
         # 用户信息
         self.user_name = None
         self.user_group = None
-        self.contribution = None
         self.coin_before = None
         self.point_before = None
+        self.contribution = None
         self.coin_after = None
         self.point_after = None
         self.formhash = None
@@ -153,13 +158,8 @@ class RightForumSigner:
         try:
             print("🔐 正在登录获取参数...")
             url = "https://www.right.com.cn/forum/forum.php"
-            headers = {
-                **self.base_headers,
-                "Upgrade-Insecure-Requests": "1",
-                "Cookie": self.cookie
-            }
 
-            response = self.session.get(url, headers=headers, timeout=15)
+            response = self.session.get(url, timeout=15)
             print(f"🔍 登录响应状态码: {response.status_code}")
 
             if response.status_code != 200:
@@ -173,93 +173,104 @@ class RightForumSigner:
             else:
                 return False, "未找到formhash参数"
 
-            # 获取uid
+            # 提取uid
             uid_match = re.search(r"discuz_uid\s*=\s*'(\d+)'", response.text)
             if uid_match:
                 self.uid = uid_match.group(1)
                 print(f"✅ 获取uid成功: {self.uid}")
             else:
-                return False, "未找到uid参数"
+                    return False, "未找到uid参数"
 
             return True, "登录成功"
 
         except Exception as e:
             return False, f"登录过程发生错误: {e}"
 
-    def get_user_profile(self, is_after=False):
-        """获取用户信息"""
+    def get_user_info(self, is_after=False):
+        """获取用户信息和积分"""
         try:
             print(f"👤 正在获取{'签到后' if is_after else '签到前'}用户信息...")
 
-            if not self.uid:
-                return False, "未获取到用户ID"
+            # 添加随机延迟
+            time.sleep(random.uniform(2, 5))
 
-            url = f"https://www.right.com.cn/forum/home.php?mod=space&uid={self.uid}&do=profile&mycenter=1"
-            headers = {
-                **self.base_headers,
-                "Referer": "https://www.right.com.cn/forum/erling_qd-sign_in.html?mobile=2",
-                "Cookie": self.cookie,
-                "Upgrade-Insecure-Requests": "1",
-                "Host": "www.right.com.cn",
-                "Cache-Control": "max-age=0",
-                "Sec-Fetch-Mode": "navigate",
-                "Sec-Fetch-Site": "same-origin",
-                "Sec-Fetch-Dest": "document"
-            }
+            response = self.session.get(url=CREDIT_URL, timeout=15)
 
-            response = self.session.get(url, headers=headers, timeout=15)
             print(f"🔍 用户信息响应状态码: {response.status_code}")
 
-            if response.status_code != 200:
-                return False, f"获取用户信息失败，状态码: {response.status_code}"
+            if response.status_code == 200:
+                # 提取积分信息
+                coin_match = re.search(r"恩山币: </em>(.*?)&nbsp;", response.text)
+                point_match = re.search(r"<em>积分: </em>(.*?)<span", response.text)
 
-            # 提取恩山币
-            esb_match = re.search(r'恩山币</em>\s*(\d+)', response.text)
-            coin = esb_match.group(1) if esb_match else "0"
+                coin = coin_match.group(1).strip() if coin_match else "0"
+                point = point_match.group(1).strip() if point_match else "0"
 
-            # 提取积分
-            point_match = re.search(r'积分</em>\s*(\d+)', response.text)
-            point = point_match.group(1) if point_match else "0"
-
-            if is_after:
-                self.coin_after = coin
-                self.point_after = point
-                print(f"💰 签到后 - 恩山币: {coin}, 积分: {point}")
-            else:
-                self.coin_before = coin
-                self.point_before = point
-                print(f"💰 签到前 - 恩山币: {coin}, 积分: {point}")
-
-            # 只在第一次获取用户名等信息
-            if not is_after:
-                # 提取用户名
-                user_match = re.search(r'<h2[^>]*>\s*([^<]+)', response.text)
-                if user_match:
-                    self.user_name = user_match.group(1).strip()
-                    print(f"👤 用户: {mask_username(self.user_name)}")
+                if is_after:
+                    self.coin_after = coin
+                    self.point_after = point
+                    print(f"💰 签到后 - 恩山币: {coin}, 积分: {point}")
                 else:
+                    self.coin_before = coin
+                    self.point_before = point
+                    print(f"💰 签到前 - 恩山币: {coin}, 积分: {point}")
+
+                # 只在第一次获取用户名等信息
+                if not is_after:
+                    username_patterns = [
+                        r'访问我的空间">(.*?)</a>',
+                        r'<strong>(.*?)</strong>',
+                        r'用户名[：:]\s*([^<\n]+)',
+                    ]
+
+                    usergroup_patterns = [
+                        r'用户组: (.*?)</a>',
+                        r'用户组[：:]\s*([^<\n]+)',
+                    ]
+
+                    contribution_patterns = [
+                        r'贡献: </em>(.*?) 分',
+                        r'贡献[：:]\s*(\d+)',
+                    ]
+
+                    # 提取用户名
                     self.user_name = "未知用户"
+                    for pattern in username_patterns:
+                        match = re.search(pattern, response.text)
+                        if match:
+                            self.user_name = match.group(1).strip()
+                            break
 
-                # 提取用户组
-                gid_match = re.search(r'用户组[^>]*>.*?<a[^>]*>([^<]+)</a>', response.text, re.DOTALL)
-                if gid_match:
-                    self.user_group = gid_match.group(1).strip()
-                    print(f"🏅 用户组: {self.user_group}")
-                else:
+                    # 提取用户组
                     self.user_group = "未知等级"
+                    for pattern in usergroup_patterns:
+                        match = re.search(pattern, response.text)
+                        if match:
+                            self.user_group = match.group(1).strip()
+                            break
 
-                # 提取贡献
-                contribution_match = re.search(r'贡献</em>\s*(\d+)', response.text)
-                if contribution_match:
-                    self.contribution = contribution_match.group(1)
-                    print(f"🎯 贡献: {self.contribution}")
-                else:
+                    # 提取贡献
                     self.contribution = "0"
+                    for pattern in contribution_patterns:
+                        match = re.search(pattern, response.text)
+                        if match:
+                            self.contribution = match.group(1).strip()
+                            break
 
-            return True, "用户信息获取成功"
+                    print(f"👤 用户: {mask_username(self.user_name)}")
+                    print(f"🏅 等级: {self.user_group}")
+                    print(f"🎯 贡献: {self.contribution}")
+
+                return True, "用户信息获取成功"
+            else:
+                error_msg = f"获取用户信息失败，状态码: {response.status_code}"
+                print(f"❌ {error_msg}")
+                return False, error_msg
 
         except Exception as e:
-            return False, f"获取用户信息异常: {str(e)}"
+            error_msg = f"获取用户信息异常: {str(e)}"
+            print(f"❌ {error_msg}")
+            return False, error_msg
 
     def perform_checkin(self):
         """执行签到"""
@@ -271,7 +282,7 @@ class RightForumSigner:
 
             url = "https://www.right.com.cn/forum/plugin.php?id=erling_qd%3Aaction&action=sign"
             headers = {
-                "User-Agent": self.base_headers["User-Agent"],
+                "User-Agent": HEADERS["User-Agent"],
                 "Accept": "application/json, text/javascript, */*; q=0.01",
                 "Accept-Language": "zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2",
                 "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
@@ -292,13 +303,13 @@ class RightForumSigner:
             data = f"formhash={self.formhash}"
 
             response = self.session.post(url, headers=headers, data=data, timeout=15)
+            print(f"🔍 签到响应状态码: {response.status_code}"
 
             if response.status_code == 200:
-                # 优先解析JSON响应
+                # 解析JSON响应
                 try:
                     result = response.json()
                     if isinstance(result, dict):
-                        # 根据API测试数据，签到成功通常有success字段或特定message
                         if result.get('success') or '成功' in str(result.get('message', '')):
                             return True, result.get('message', '签到成功')
                         elif result.get('message'):
@@ -309,20 +320,7 @@ class RightForumSigner:
                             else:
                                 return False, f"签到失败: {message}"
                 except ValueError:
-                    print("⚠️ 响应不是JSON格式，进行文本分析")
-                    pass  # 不是JSON格式，继续文本分析
-
-                # 文本分析（兼容非JSON响应）
-                response_text = response.text.lower()
-                if 'success' in response_text or '成功' in response_text:
-                    return True, "签到成功"
-                elif '已签到' in response_text or '已经签到' in response_text:
-                    return True, "今日已签到"
-                elif '失败' in response_text or 'error' in response_text:
-                    return False, "签到失败"
-                else:
-                    # 未知响应，但状态码是200，暂时认为成功
-                    return True, "签到完成（状态未知）"
+                    return False, "响应格式错误，无法解析JSON"
             else:
                 return False, f"签到请求失败，状态码: {response.status_code}"
 
@@ -347,29 +345,29 @@ class RightForumSigner:
             print(f"❌ {error_msg}")
             return error_msg, False
 
-        # 1. 登录获取参数
+        # 1. 获取签到前用户信息
         login_success, login_msg = self.daily_login()
         if not login_success:
             return f"登录失败: {login_msg}", False
-
-        # 2. 获取签到前用户信息
-        time.sleep(random.uniform(2, 4))
-        user_success, user_msg = self.get_user_profile(is_after=False)
+        user_success, user_msg = self.get_user_info(is_after=False)
         if not user_success:
             print(f"⚠️ 获取用户信息失败: {user_msg}")
 
+        # 2. 随机等待
+        time.sleep(random.uniform(2, 5))
+
         # 3. 执行签到
-        time.sleep(random.uniform(3, 6))
         signin_success, signin_msg = self.perform_checkin()
 
         # 4. 获取签到后用户信息
         time.sleep(random.uniform(2, 4))
-        after_success, after_msg = self.get_user_profile(is_after=True)
+        after_success, after_msg = self.get_user_info(is_after=True)
 
         # 5. 通过积分变化判断签到是否真的成功
         gain_info = ""
         if after_success and self.coin_before and self.coin_after:
             try:
+                # 修复：清理数据，移除"币"等文字，只保留数字
                 coin_before = extract_number(self.coin_before)
                 coin_after = extract_number(self.coin_after)
                 point_before = extract_number(self.point_before)
@@ -385,23 +383,19 @@ class RightForumSigner:
                     signin_msg = f"签到成功，获得 {coin_gain} 恩山币，{point_gain} 积分"
                     gain_info = f"\n🎁 本次收益: +{coin_gain} 恩山币, +{point_gain} 积分"
                     print(f"✅ 通过积分变化确认签到成功: +{coin_gain} 恩山币, +{point_gain} 积分")
-                elif coin_gain == 0 and point_gain == 0 and "成功" in signin_msg:
-                    # 积分无变化但签到API返回成功，说明今日已签到
+                elif coin_gain == 0 and point_gain == 0:
+                    # 积分没变化，可能已经签到过了
                     signin_success = True
                     signin_msg = "今日已签到（积分无变化）"
                     print("📅 积分无变化，今日已签到")
-                elif coin_gain == 0 and point_gain == 0:
-                    # 积分无变化且API未明确成功，需要重新判断
-                    if "已签到" in signin_msg or "成功" in signin_msg:
-                        signin_success = True
-                    else:
-                        signin_success = False
                 else:
                     print("⚠️ 积分变化异常，但仍认为签到成功")
                     signin_success = True
 
             except Exception as e:
                 print(f"⚠️ 积分变化计算异常: {e}")
+                # 如果积分计算失败，使用原始签到结果
+                print("🔄 使用原始签到结果")
 
         # 6. 组合结果消息
         final_msg = f"""🌟 恩山论坛签到结果
@@ -483,7 +477,7 @@ def main():
                 time.sleep(delay)
 
             # 执行签到
-            signer = RightForumSigner(cookie, index + 1)
+            signer = EnShanSigner(cookie, index + 1)
             result_msg, is_success = signer.main()
 
             if is_success:
