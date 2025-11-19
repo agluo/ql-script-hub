@@ -1,8 +1,3 @@
-*"""
-cron "39 12 * * *" script-path=xxx.py,tag=匹配cron用
-new Env('恩山论坛签到')
-"""
-
 import os
 import re
 import requests
@@ -26,7 +21,7 @@ max_random_delay = int(os.getenv("MAX_RANDOM_DELAY", "3600"))
 random_signin = os.getenv("RANDOM_SIGNIN", "true").lower() == "true"
 privacy_mode = os.getenv("PRIVACY_MODE", "true").lower() == "true"
 
-# 恩山论坛
+# 恩山论坛配置
 BASE_URL = 'https://www.right.com.cn/FORUM'
 CREDIT_URL = f'{BASE_URL}/home.php?mod=spacecp&ac=credit&showcredit=1'
 CHECKIN_URL = f'{BASE_URL}/k_misign-sign.html'
@@ -179,6 +174,12 @@ class EnShanSigner:
                 self.uid = uid_match.group(1)
                 print(f"✅ 获取uid成功: {self.uid}")
             else:
+                # 尝试其他可能的uid提取方式
+                uid_match2 = re.search(r'uid=(\d+)', response.text)
+                if uid_match2:
+                    self.uid = uid_match2.group(1)
+                    print(f"✅ 获取uid成功(备用方式): {self.uid}")
+                else:
                     return False, "未找到uid参数"
 
             return True, "登录成功"
@@ -273,7 +274,7 @@ class EnShanSigner:
             return False, error_msg
 
     def perform_checkin(self):
-        """执行签到"""
+        """执行签到 - 改进版状态判断"""
         try:
             print("📝 正在执行签到...")
 
@@ -303,13 +304,15 @@ class EnShanSigner:
             data = f"formhash={self.formhash}"
 
             response = self.session.post(url, headers=headers, data=data, timeout=15)
-            print(f"🔍 签到响应状态码: {response.status_code}"
+            print(f"🔍 签到响应状态码: {response.status_code}")
+            print(f"🔍 签到响应内容: {response.text[:200]}...")  # 显示前200字符便于调试
 
             if response.status_code == 200:
                 # 解析JSON响应
                 try:
                     result = response.json()
                     if isinstance(result, dict):
+                        # 根据API测试数据，签到成功通常有success字段或特定message
                         if result.get('success') or '成功' in str(result.get('message', '')):
                             return True, result.get('message', '签到成功')
                         elif result.get('message'):
@@ -345,7 +348,7 @@ class EnShanSigner:
             print(f"❌ {error_msg}")
             return error_msg, False
 
-        # 1. 获取签到前用户信息
+        # 1. 登录获取参数
         login_success, login_msg = self.daily_login()
         if not login_success:
             return f"登录失败: {login_msg}", False
