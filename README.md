@@ -53,7 +53,7 @@ ql-script-hub/
 1. **拉取仓库**
    ```bash
    # 在青龙面板订阅管理中添加订阅
-   # 订阅地址：https://github.com/dfdg881/ql-script-hub.git
+   # 订阅地址：https://github.com/agluo/ql-script-hub.git
    ```
   <img width="774" height="1112" alt="image" src="https://github.com/user-attachments/assets/de6cf07f-7af2-42b9-8321-c2ccc542820b" />
   
