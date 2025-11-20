@@ -303,7 +303,7 @@ class EnShanSigner:
             data = f"formhash={self.formhash}"
 
             response = self.session.post(url, headers=headers, data=data, timeout=15)
-            print(f"🔍 签到响应状态码: {response.status_code}"
+            print(f"🔍 签到响应状态码: {response.status_code}")
 
             if response.status_code == 200:
                 # 解析JSON响应
