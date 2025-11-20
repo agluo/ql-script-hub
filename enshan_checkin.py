@@ -26,7 +26,7 @@ max_random_delay = int(os.getenv("MAX_RANDOM_DELAY", "3600"))
 random_signin = os.getenv("RANDOM_SIGNIN", "true").lower() == "true"
 privacy_mode = os.getenv("PRIVACY_MODE", "true").lower() == "true"
 
-# 恩山论坛
+# 恩山论坛配置
 BASE_URL = 'https://www.right.com.cn/FORUM'
 CREDIT_URL = f'{BASE_URL}/home.php?mod=spacecp&ac=credit&showcredit=1'
 CHECKIN_URL = f'{BASE_URL}/k_misign-sign.html'
