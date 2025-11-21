@@ -639,7 +639,8 @@ def get_quarter_end_date():
     current_date = datetime.now()
     current_month = current_date.month
     current_year = current_date.year
-    next_quarter_first_day = datetime(current_year, ((current_month - 1) // 3 + 1) * 3 + 1, 1)
+    next_quarter_month = ((current_month - 1) // 3 + 1) * 3 + 1
+    next_quarter_first_day = datetime(next_quarter_month == 13 ? (current_year + 1) : current_year, next_quarter_month == 13 ? 1 : next_quarter_month , 1)
     return next_quarter_first_day - timedelta(days=1)
 
 if __name__ == '__main__':
