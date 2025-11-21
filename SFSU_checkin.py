@@ -163,7 +163,7 @@ class RUN:
         timestamp = str(int(time.time() * 1000))
         token = 'wwesldfs29aniversaryvdld29'
         sysCode = 'MCS-MIMP-CORE'
-        data = f'token={token}×tamp={timestamp}&sysCode={sysCode}'
+        data = f'token={token}&timestamp={timestamp}&sysCode={sysCode}'
         signature = hashlib.md5(data.encode()).hexdigest()
         data = {
             'sysCode': sysCode,
@@ -639,8 +639,18 @@ def get_quarter_end_date():
     current_date = datetime.now()
     current_month = current_date.month
     current_year = current_date.year
-    next_quarter_month = ((current_month - 1) // 3 + 1) * 3 + 1
-    next_quarter_first_day = datetime(next_quarter_month == 13 ? (current_year + 1) : current_year, next_quarter_month == 13 ? 1 : next_quarter_month , 1)
+    
+    # 计算下一季度的第一个月
+    quarter_index = (current_month - 1) // 3 + 1
+    next_quarter_month = quarter_index * 3 + 1
+    
+    if next_quarter_month > 12:
+        # 如果计算结果是13（即当前是第4季度），下个季度第一天是明年的1月1日
+        next_quarter_first_day = datetime(current_year + 1, 1, 1)
+    else:
+        # 否则就在当年
+        next_quarter_first_day = datetime(current_year, next_quarter_month, 1)
+        
     return next_quarter_first_day - timedelta(days=1)
 
 if __name__ == '__main__':
