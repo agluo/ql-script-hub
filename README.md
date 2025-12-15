@@ -1,6 +1,6 @@
 # QL Script Hub
 
-> 🚀 个人青龙面板脚本库 - 签到、薅羊毛一站式解决方案
+> 🚀 个人青龙面板脚本库 - 签到、监控一站式解决方案
 
 [![GitHub stars](https://img.shields.io/github/stars/agluo/ql-script-hub?style=flat-square)](https://github.com/agluo/ql-script-hub/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/agluo/ql-script-hub?style=flat-square)](https://github.com/agluo/ql-script-hub/network)
@@ -9,11 +9,11 @@
 
 ## 📋 项目简介
 
-QL Script Hub 是一个专为青龙面板打造的综合性脚本库，提供签到、薅羊毛等多种类型的自动化脚本。所有脚本均经过测试，确保稳定可靠。
+QL Script Hub 是一个专为青龙面板打造的综合性脚本库，提供签到、监控等多种类型的自动化脚本。所有脚本均经过测试，确保稳定可靠。
 
 ## ✨ 功能特性
 
-- 🎯 **多样化脚本** - 涵盖签到、薅羊毛、监控等多种场景
+- 🎯 **多样化脚本** - 涵盖签到、监控等多种场景
 - 🔧 **易于配置** - 统一的配置文件格式，简单易懂
 - 📦 **模块化设计** - 清晰的目录结构，便于管理和扩展
 - 🛡️ **安全可靠** - 所有脚本均经过测试，保证安全性
