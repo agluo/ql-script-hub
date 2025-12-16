@@ -27,8 +27,18 @@ random_signin = os.getenv("RANDOM_SIGNIN", "true").lower() == "true"
 privacy_mode = os.getenv("PRIVACY_MODE", "true").lower() == "true"
 
 # 恩山论坛配置
-BASE_URL = 'https://www.right.com.cn/FORUM'
-CREDIT_URL = f'{BASE_URL}/home.php?mod=spacecp&ac=credit&showcredit=1'
+# 注意：right.com.cn 的路径大小写会影响可访问性；站点实际使用的是 /forum
+BASE_URL = 'https://www.right.com.cn/forum'
+
+# 积分页（用户信息）可能存在不同参数形式；按顺序尝试
+CREDIT_URLS = [
+    f'{BASE_URL}/home.php?mod=spacecp&ac=credit',
+    f'{BASE_URL}/home.php?mod=spacecp&ac=credit&showcredit=1',
+    # 兼容历史配置（部分环境里曾误写为 /FORUM）
+    'https://www.right.com.cn/FORUM/home.php?mod=spacecp&ac=credit',
+    'https://www.right.com.cn/FORUM/home.php?mod=spacecp&ac=credit&showcredit=1',
+]
+
 CHECKIN_URL = f'{BASE_URL}/k_misign-sign.html'
 
 HEADERS = {
@@ -132,6 +142,15 @@ def extract_number(text):
     except (ValueError, TypeError):
         return 0
 
+def extract_first(text, patterns, default=None, flags=0):
+    """按顺序尝试正则，返回第一个匹配到的 group(1)（strip后）。"""
+    for pattern in patterns:
+        match = re.search(pattern, text, flags)
+        if match:
+            value = match.group(1)
+            return value.strip() if isinstance(value, str) else value
+    return default
+
 class EnShanSigner:
     name = "恩山论坛"
 
@@ -194,17 +213,62 @@ class EnShanSigner:
             # 添加随机延迟
             time.sleep(random.uniform(2, 5))
 
-            response = self.session.get(url=CREDIT_URL, timeout=15)
+            # 部分情况下积分页会返回 521（源站/WAF/路径大小写导致），这里做重试并尝试多个候选URL
+            response = None
+            last_status = None
+            for url in CREDIT_URLS:
+                for attempt in range(1, 4):
+                    headers = {
+                        **HEADERS,
+                        'Referer': f'{BASE_URL}/forum.php',
+                    }
+                    resp = self.session.get(url=url, headers=headers, timeout=20, allow_redirects=True)
+                    last_status = resp.status_code
+                    if resp.status_code == 200 and resp.text:
+                        response = resp
+                        break
+
+                    # 521/5xx/429 等临时性错误：短暂退避后重试
+                    if resp.status_code in (429, 521) or 500 <= resp.status_code < 600:
+                        time.sleep(1.5 * attempt + random.uniform(0, 0.8))
+                        continue
+
+                    # 其他状态码通常不是临时问题，换下一个URL
+                    break
+                if response is not None:
+                    break
+
+            if response is None:
+                error_msg = f"获取用户信息失败，状态码: {last_status}"
+                print(f"🔍 用户信息响应状态码: {last_status}")
+                print(f"❌ {error_msg}")
+                return False, error_msg
 
             print(f"🔍 用户信息响应状态码: {response.status_code}")
 
             if response.status_code == 200:
                 # 提取积分信息
-                coin_match = re.search(r"恩山币: </em>(.*?)&nbsp;", response.text)
-                point_match = re.search(r"<em>积分: </em>(.*?)<span", response.text)
-
-                coin = coin_match.group(1).strip() if coin_match else "0"
-                point = point_match.group(1).strip() if point_match else "0"
+                # 页面结构可能随主题变化，使用多套模式兜底
+                coin = extract_first(
+                    response.text,
+                    patterns=[
+                        r"恩山币\s*[:：]\s*</em>\s*([^<&\s]+)",
+                        r"恩山币\s*[:：]\s*([^<\s]+)\s*币",
+                        r"恩山币\s*[:：]\s*([^<\s]+)",
+                    ],
+                    default="0",
+                    flags=re.S,
+                )
+                point = extract_first(
+                    response.text,
+                    patterns=[
+                        r"积分\s*[:：]\s*</em>\s*([^<&\s]+)",
+                        r"<em>\s*积分\s*[:：]\s*</em>\s*([^<\s]+)",
+                        r"积分\s*[:：]\s*([^<\s]+)",
+                    ],
+                    default="0",
+                    flags=re.S,
+                )
 
                 if is_after:
                     self.coin_after = coin
@@ -217,45 +281,37 @@ class EnShanSigner:
 
                 # 只在第一次获取用户名等信息
                 if not is_after:
-                    username_patterns = [
-                        r'访问我的空间">(.*?)</a>',
-                        r'<strong>(.*?)</strong>',
-                        r'用户名[：:]\s*([^<\n]+)',
-                    ]
+                    self.user_name = extract_first(
+                        response.text,
+                        patterns=[
+                            r'访问我的空间">([^<]+)</a>',
+                            r'class="vwmy"[^>]*>([^<]+)</a>',
+                            r'欢迎您回来\s*,\s*([^<\n]+)',
+                            r'用户名[：:]\s*([^<\n]+)',
+                        ],
+                        default="未知用户",
+                        flags=re.S,
+                    )
 
-                    usergroup_patterns = [
-                        r'用户组: (.*?)</a>',
-                        r'用户组[：:]\s*([^<\n]+)',
-                    ]
+                    self.user_group = extract_first(
+                        response.text,
+                        patterns=[
+                            r'用户组\s*[:：]\s*([^<\n]+)</',
+                            r'用户组\s*[:：]\s*([^<\n]+)',
+                        ],
+                        default="未知等级",
+                        flags=re.S,
+                    )
 
-                    contribution_patterns = [
-                        r'贡献: </em>(.*?) 分',
-                        r'贡献[：:]\s*(\d+)',
-                    ]
-
-                    # 提取用户名
-                    self.user_name = "未知用户"
-                    for pattern in username_patterns:
-                        match = re.search(pattern, response.text)
-                        if match:
-                            self.user_name = match.group(1).strip()
-                            break
-
-                    # 提取用户组
-                    self.user_group = "未知等级"
-                    for pattern in usergroup_patterns:
-                        match = re.search(pattern, response.text)
-                        if match:
-                            self.user_group = match.group(1).strip()
-                            break
-
-                    # 提取贡献
-                    self.contribution = "0"
-                    for pattern in contribution_patterns:
-                        match = re.search(pattern, response.text)
-                        if match:
-                            self.contribution = match.group(1).strip()
-                            break
+                    self.contribution = extract_first(
+                        response.text,
+                        patterns=[
+                            r'贡献\s*[:：]\s*</em>\s*([^<\s]+)\s*分',
+                            r'贡献\s*[:：]\s*(\d+)',
+                        ],
+                        default="0",
+                        flags=re.S,
+                    )
 
                     print(f"👤 用户: {mask_username(self.user_name)}")
                     print(f"🏅 等级: {self.user_group}")
@@ -400,14 +456,14 @@ class EnShanSigner:
         # 6. 组合结果消息
         final_msg = f"""🌟 恩山论坛签到结果
 
-👤 用户: {mask_username(self.user_name)}
-🏅 等级: {self.user_group}
-💰 恩山币: {self.coin_before} → {self.coin_after or self.coin_before}
-📊 积分: {self.point_before} → {self.point_after or self.point_before}
-🎯 贡献: {self.contribution} 分{gain_info}
+    👤 用户: {mask_username(self.user_name) or '未知用户'}
+    🏅 等级: {self.user_group or '未知等级'}
+    💰 恩山币: {self.coin_before or '未知'} → {self.coin_after or self.coin_before or '未知'}
+    📊 积分: {self.point_before or '未知'} → {self.point_after or self.point_before or '未知'}
+    🎯 贡献: {self.contribution or '0'} 分{gain_info}
 
-📝 签到: {signin_msg}
-⏰ 时间: {datetime.now().strftime('%m-%d %H:%M')}"""
+    📝 签到: {signin_msg}
+    ⏰ 时间: {datetime.now().strftime('%m-%d %H:%M')}"""
 
         print(f"{'✅ 任务完成' if signin_success else '❌ 任务失败'}")
         return final_msg, signin_success
