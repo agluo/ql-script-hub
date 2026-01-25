@@ -34,6 +34,7 @@ ql-script-hub/
 ├── nga_checkin.py         # NGA论坛签到
 ├── ty_netdisk_checkin.py  # 天翼云盘签到
 ├── quark_signin.py        # 夸克网盘签到脚本
+├── CDRail.py              # 成都地铁签到脚本
 ├── SFSU_checkin.py        # 顺丰速运签到脚本
 ├── smzdm_checkin.py       # 什么值得买签到脚本
 ├── deepflood_checkin.py   # deepflood签到脚本
@@ -88,6 +89,35 @@ ql-script-hub/
 | 变量名 | 说明 | 是否必需 | 示例值 | 备注 |
 |--------|------|----------|--------|------|
 | `QUARK_COOKIE` | 夸克网盘Cookie | **必需** | `cookie1&&cookie2` | 多账号用`&&`或回车分隔 |
+
+#### 🚇 成都地铁签到配置
+
+| 变量名 | 说明 | 是否必需 | 示例值 | 备注 |
+|--------|------|----------|--------|------|
+| `CDRAIL_DATA` | 成都地铁请求数据（从抓包 headers 提取） | **必需** | `{"token":"xxx","app-token":"yyy","Cookie":"zzz"}` | 支持 `JSON` 或 `token=...&app-token=...&cookie=...`；多账号用换行或`@`分隔 |
+
+`CDRAIL_DATA` 需要包含的字段（建议直接从抓包请求头复制/提取）：
+
+| 字段 | 是否必需 | 说明 |
+|------|----------|------|
+| `token` | **必需** | 请求头里的 `token` |
+| `app-token` | **必需** | 请求头里的 `app-token` |
+| `Cookie` / `cookie` | **必需** | 登录后的 Cookie（脚本会自动兼容大小写） |
+| `deviceId` / `device-id` | 建议 | 设备标识；仓库内默认值为占位符，推荐用你自己抓包到的设备ID |
+
+格式示例：
+
+```bash
+# JSON 单账号（推荐）
+export CDRAIL_DATA='{"token":"xxx","app-token":"yyy","Cookie":"zzz","deviceId":"xxx-xxx"}'
+
+# querystring 单账号
+export CDRAIL_DATA='token=xxx&app-token=yyy&cookie=zzz&deviceId=xxx-xxx'
+
+# 多账号：换行 或 @ 分割
+export CDRAIL_DATA='{"token":"t1","app-token":"a1","Cookie":"c1","deviceId":"d1"}
+{"token":"t2","app-token":"a2","Cookie":"c2","deviceId":"d2"}'
+```
 
 #### 📦 顺丰速运签到配置
 
