@@ -37,6 +37,7 @@ ql-script-hub/
 ├── nga_checkin.py               # NGA forum check-in
 ├── nodeseek_checkin.py          # NodeSeek check-in
 ├── quark_signin.py              # Quark Drive sign-in
+├── CDRail.py                    # Chengdu Metro sign-in
 ├── SFSU_checkin.py              # SF Express sign-in
 ├── SMZDM_checkin.py             # SMZDM sign-in
 ├── tieba_checkin.py             # Baidu Tieba sign-in
@@ -93,6 +94,35 @@ ql-script-hub/
 | Variable | Description | Required | Example | Notes |
 |--------|------|----------|--------|------|
 | `QUARK_COOKIE` | Quark Drive cookie | **Required** | `cookie1&&cookie2` | Separate multiple accounts with `&&` or new lines |
+
+#### 🚇 Chengdu Metro
+
+| Variable | Description | Required | Example | Notes |
+|--------|------|----------|--------|------|
+| `CDRAIL_DATA` | Chengdu Metro request data extracted from captured headers | **Required** | `{"token":"xxx","app-token":"yyy","Cookie":"zzz"}` | Supports `JSON` or `token=...&app-token=...&cookie=...`; separate multiple accounts with new lines or `@` |
+
+`CDRAIL_DATA` should include the following fields, preferably copied directly from the captured request headers:
+
+| Field | Required | Description |
+|------|----------|------|
+| `token` | **Required** | The `token` value from request headers |
+| `app-token` | **Required** | The `app-token` value from request headers |
+| `Cookie` / `cookie` | **Required** | Logged-in cookie; the script handles case differences automatically |
+| `deviceId` / `device-id` | Recommended | Device identifier; the repository default is only a placeholder, so using your own captured device ID is recommended |
+
+Example formats:
+
+```bash
+# Single account in JSON format (recommended)
+export CDRAIL_DATA='{"token":"xxx","app-token":"yyy","Cookie":"zzz","deviceId":"xxx-xxx"}'
+
+# Single account in querystring format
+export CDRAIL_DATA='token=xxx&app-token=yyy&cookie=zzz&deviceId=xxx-xxx'
+
+# Multiple accounts: separated by new lines or `@`
+export CDRAIL_DATA='{"token":"t1","app-token":"a1","Cookie":"c1","deviceId":"d1"}
+{"token":"t2","app-token":"a2","Cookie":"c2","deviceId":"d2"}'
+```
 
 #### 📦 SF Express
 
