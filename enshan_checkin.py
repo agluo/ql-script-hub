@@ -171,36 +171,334 @@ class EnShanSigner:
         self.point_after = None
         self.formhash = None
         self.uid = None
+        self.sign_in_page_url = f"{BASE_URL}/erling_qd-sign_in.html"
+        self.sign_url = f"{BASE_URL}/plugin.php?id=erling_qd:action&action=sign"
+
+    def _sync_cookie_header(self):
+        self.session.headers['Cookie'] = self.cookie
+
+    @staticmethod
+    def _rotl8(x, r):
+        x &= 0xFF
+        r &= 7
+        return ((x << r) & 0xFF) | (x >> (8 - r))
+
+    @staticmethod
+    def _rotr8(x, r):
+        x &= 0xFF
+        r &= 7
+        return (x >> r) | ((x << (8 - r)) & 0xFF)
+
+    @staticmethod
+    def _extract_oo(html):
+        match = re.search(r"oo\s*=\s*\[([^\]]+)\]", html)
+        if not match:
+            return None
+        tokens = re.findall(r"0x[0-9a-fA-F]+|\d+", match.group(1))
+        if not tokens:
+            return None
+        values = []
+        for token in tokens:
+            if token.lower().startswith("0x"):
+                values.append(int(token, 16))
+            else:
+                values.append(int(token))
+        return values
+
+    @staticmethod
+    def _extract_wi(html):
+        match = re.search(r'setTimeout\("\w+\((\d+)\)"', html)
+        if match:
+            return int(match.group(1))
+        match = re.search(r"\b\w+\((\d+)\)", html)
+        if match:
+            return int(match.group(1))
+        return None
+
+    @staticmethod
+    def _extract_loop1_params(html):
+        pattern = (
+            r"qo\s*=\s*(\d+);\s*do\{.*?oo\[qo\]=\(-oo\[qo\]\)&0xff;.*?"
+            r"oo\[qo\]=\(\(\(oo\[qo\]>>(\d+)\)\|\(\(oo\[qo\]<<(\d+)\)&0xff\)\)\-(\d+)\)&0xff;.*?"
+            r"\}\s*while\(--qo>=2\);"
+        )
+        match = re.search(pattern, html, re.S)
+        if not match:
+            return None
+        return {
+            "start": int(match.group(1)),
+            "shift_r": int(match.group(2)),
+            "shift_l": int(match.group(3)),
+            "sub": int(match.group(4)),
+        }
+
+    @staticmethod
+    def _extract_loop2_start(html):
+        match = re.search(
+            r"qo\s*=\s*(\d+);\s*do\s*\{[^}]*?oo\[qo\]\s*=\s*\(oo\[qo\]\s*-\s*oo\[qo\s*-\s*1\]\)\s*&\s*0xff;[^}]*?\}\s*while\s*\(\s*--\s*qo\s*>=\s*3\s*\)",
+            html,
+            re.S,
+        )
+        if not match:
+            return None
+        return int(match.group(1))
+
+    @staticmethod
+    def _extract_loop3_params(html):
+        block_match = re.search(
+            r"qo\s*=\s*1;\s*for\s*\(.*?\)\s*\{(.*?)\}\s*po\s*=",
+            html,
+            re.S,
+        )
+        if not block_match:
+            return None
+        block = block_match.group(1)
+
+        upper_match = re.search(r"qo\s*>\s*(\d+)\)\s*break", block)
+        if not upper_match:
+            return None
+        upper = int(upper_match.group(1))
+
+        assign_match = re.search(r"oo\[qo\]\s*=\s*(.+?);", block, re.S)
+        if not assign_match:
+            return None
+        expr = assign_match.group(1)
+
+        add_nums = re.findall(r"\+\s*(\d+)", expr)
+        if len(add_nums) < 2:
+            return None
+        add1 = int(add_nums[0])
+        add2 = int(add_nums[1])
+
+        shift_nums = re.findall(r"<<\s*(\d+)|>>\s*(\d+)", expr)
+        shifts = []
+        for left, right in shift_nums:
+            if left:
+                shifts.append(int(left))
+            if right:
+                shifts.append(int(right))
+        if len(shifts) < 2:
+            return None
+        rot_l = shifts[0]
+        return {
+            "upper": upper,
+            "add1": add1,
+            "add2": add2,
+            "rot_l": rot_l,
+        }
+
+    @staticmethod
+    def _extract_mod_skip(html):
+        match = re.search(r"qo\s*%\s*(\d+)", html)
+        if not match:
+            return 7
+        return int(match.group(1))
+
+    def _decode_po(self, oo_hex, wi, params):
+        oo = [b & 0xFF for b in oo_hex]
+        if len(oo) < 6:
+            return ""
+
+        last_index = len(oo) - 1
+        loop1_start = params["loop1_start"]
+        loop2_start = params["loop2_start"]
+        loop3_upper = params["loop3_upper"]
+        shift_r = params["shift_r"]
+        shift_l = params["shift_l"]
+        sub = params["sub"]
+        add1 = params["add1"]
+        add2 = params["add2"]
+        rot_l = params["rot_l"]
+        mod_skip = params["mod_skip"]
+
+        qo = min(loop1_start, last_index - 1)
+        while True:
+            oo[qo] = (-oo[qo]) & 0xFF
+            if (shift_r + shift_l) == 8:
+                oo[qo] = (self._rotr8(oo[qo], shift_r) - sub) & 0xFF
+            else:
+                oo[qo] = (((oo[qo] >> shift_r) | ((oo[qo] << shift_l) & 0xFF)) - sub) & 0xFF
+            qo -= 1
+            if qo < 2:
+                break
+
+        qo = min(loop2_start, last_index - 2)
+        while True:
+            oo[qo] = (oo[qo] - oo[qo - 1]) & 0xFF
+            qo -= 1
+            if qo < 3:
+                break
+
+        for qo in range(1, min(loop3_upper, last_index - 1) + 1):
+            x = (oo[qo] + add1) & 0xFF
+            x = (x + add2) & 0xFF
+            oo[qo] = self._rotl8(x, rot_l)
+
+        po_chars = []
+        for qo in range(1, last_index):
+            if qo % mod_skip != 0:
+                po_chars.append(chr((oo[qo] ^ (wi & 0xFF)) & 0xFF))
+        return "".join(po_chars)
+
+    @staticmethod
+    def _extract_cookie_kv(decoded_js):
+        match = re.search(r"document\.cookie=['\"]([^'\"]+)['\"]", decoded_js)
+        if not match:
+            return None
+        cookie_str = match.group(1).strip()
+        if not cookie_str:
+            return None
+        return cookie_str.split(';', 1)[0].strip()
+
+    @staticmethod
+    def _upsert_cookie(base_cookies, new_cookie_kv):
+        if not new_cookie_kv or '=' not in new_cookie_kv:
+            return base_cookies
+        new_key, new_value = new_cookie_kv.split('=', 1)
+        new_key = new_key.strip()
+        new_value = new_value.strip()
+
+        parts = []
+        replaced = False
+        for raw in base_cookies.split(';'):
+            part = raw.strip()
+            if not part or '=' not in part:
+                continue
+            key, value = part.split('=', 1)
+            key = key.strip()
+            if key == new_key:
+                parts.append(f"{new_key}={new_value}")
+                replaced = True
+            else:
+                parts.append(f"{key}={value.strip()}")
+        if not replaced:
+            parts.append(f"{new_key}={new_value}")
+        return '; '.join(parts)
+
+    @staticmethod
+    def _extract_formhash(html):
+        patterns = [
+            r'name="formhash"\s+value="([0-9a-fA-F]+)"',
+            r"member\.php\?mod=logging(?:&amp;|&)action=logout(?:&amp;|&)formhash=([0-9a-fA-F]+)",
+        ]
+        return extract_first(html, patterns=patterns, default=None, flags=re.S)
+
+    def _get_clearance_headers(self):
+        return {
+            'User-Agent': HEADERS['User-Agent'],
+            'Accept': (
+                'text/html,application/xhtml+xml,application/xml;q=0.9,'
+                'image/avif,image/webp,image/apng,*/*;q=0.8'
+            ),
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Pragma': 'no-cache',
+            'Cache-Control': 'no-cache',
+            'Accept-Language': 'zh-CN,zh;q=0.9',
+            'Upgrade-Insecure-Requests': '1',
+            'Sec-Fetch-Site': 'same-origin',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-User': '?1',
+            'Sec-Fetch-Dest': 'document',
+            'Referer': self.sign_in_page_url,
+            'Cookie': self.cookie,
+        }
+
+    def _merge_response_cookies(self, response):
+        for name, value in response.cookies.items():
+            self.cookie = self._upsert_cookie(self.cookie, f"{name}={value}")
+        self._sync_cookie_header()
+
+    def _refresh_clearance_cookie(self):
+        try:
+            response = self.session.get(
+                self.sign_in_page_url,
+                headers=self._get_clearance_headers(),
+                timeout=30,
+                allow_redirects=True
+            )
+        except Exception as e:
+            return False, f"获取签到页失败: {e}"
+
+        self._merge_response_cookies(response)
+
+        if "oo" not in response.text:
+            formhash = self._extract_formhash(response.text)
+            if formhash:
+                self.formhash = formhash
+                return True, "已刷新签到参数"
+            return False, "签到页未提取到formhash"
+
+        oo = self._extract_oo(response.text)
+        wi = self._extract_wi(response.text)
+        loop1 = self._extract_loop1_params(response.text)
+        loop2_start = self._extract_loop2_start(response.text)
+        loop3 = self._extract_loop3_params(response.text)
+        if not oo or wi is None or not loop1 or loop2_start is None or not loop3:
+            return False, "WAF挑战参数提取失败"
+
+        params = {
+            "loop1_start": loop1["start"],
+            "loop2_start": loop2_start,
+            "loop3_upper": loop3["upper"],
+            "shift_r": loop1["shift_r"],
+            "shift_l": loop1["shift_l"],
+            "sub": loop1["sub"],
+            "add1": loop3["add1"],
+            "add2": loop3["add2"],
+            "rot_l": loop3["rot_l"],
+            "mod_skip": self._extract_mod_skip(response.text),
+        }
+        decoded_js = self._decode_po(oo, wi, params)
+        cookie_kv = self._extract_cookie_kv(decoded_js)
+        if not cookie_kv:
+            return False, "WAF解码后未找到cookie"
+
+        self.cookie = self._upsert_cookie(self.cookie, cookie_kv)
+        self._sync_cookie_header()
+
+        try:
+            follow = self.session.get(
+                self.sign_in_page_url,
+                headers=self._get_clearance_headers(),
+                timeout=30,
+                allow_redirects=True
+            )
+        except Exception as e:
+            return False, f"WAF通过后重试签到页失败: {e}"
+
+        self._merge_response_cookies(follow)
+        formhash = self._extract_formhash(follow.text)
+        if formhash:
+            self.formhash = formhash
+            return True, "已刷新WAF Cookie和formhash"
+        return False, "WAF通过后未提取到formhash"
 
     def daily_login(self):
         """每日登录 - 获取formhash和uid"""
         try:
             print("🔐 正在登录获取参数...")
-            url = "https://www.right.com.cn/forum/forum.php"
+            clearance_ok, clearance_msg = self._refresh_clearance_cookie()
+            if clearance_ok and self.formhash:
+                print(f"✅ 获取formhash成功: {self.formhash}")
+                return True, "登录成功"
 
-            response = self.session.get(url, timeout=15)
+            print(f"⚠️ 签到页参数获取失败，回退forum页: {clearance_msg}")
+            url = f"{BASE_URL}/forum.php"
+            response = self.session.get(url, timeout=20)
             print(f"🔍 登录响应状态码: {response.status_code}")
-
             if response.status_code != 200:
                 return False, f"登录失败，状态码: {response.status_code}"
 
-            # 提取formhash
-            formhash_match = re.search(r'name="formhash"\s+value="([^"]+)"', response.text)
-            if formhash_match:
-                self.formhash = formhash_match.group(1)
+            self._merge_response_cookies(response)
+            self.formhash = self._extract_formhash(response.text)
+            if self.formhash:
                 print(f"✅ 获取formhash成功: {self.formhash}")
-            else:
-                return False, "未找到formhash参数"
-
-            # 提取uid
-            uid_match = re.search(r"discuz_uid\s*=\s*'(\d+)'", response.text)
-            if uid_match:
-                self.uid = uid_match.group(1)
-                print(f"✅ 获取uid成功: {self.uid}")
-            else:
-                    return False, "未找到uid参数"
-
-            return True, "登录成功"
+                uid_match = re.search(r"discuz_uid\s*=\s*'(\d+)'", response.text)
+                if uid_match:
+                    self.uid = uid_match.group(1)
+                    print(f"✅ 获取uid成功: {self.uid}")
+                return True, "登录成功"
+            return False, "未找到formhash参数"
 
         except Exception as e:
             return False, f"登录过程发生错误: {e}"
@@ -334,51 +632,55 @@ class EnShanSigner:
             print("📝 正在执行签到...")
 
             if not self.formhash:
-                return False, "请先执行登录获取formhash"
+                login_ok, login_msg = self.daily_login()
+                if not login_ok:
+                    return False, f"请先执行登录获取formhash: {login_msg}"
 
-            url = "https://www.right.com.cn/forum/plugin.php?id=erling_qd%3Aaction&action=sign"
+            # 签到前再刷新一次，降低WAF过期导致的失败
+            self._refresh_clearance_cookie()
+
             headers = {
                 "User-Agent": HEADERS["User-Agent"],
                 "Accept": "application/json, text/javascript, */*; q=0.01",
-                "Accept-Language": "zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2",
+                "Accept-Language": "zh-CN,zh;q=0.9",
+                "Accept-Encoding": "gzip, deflate, br",
                 "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
                 "X-Requested-With": "XMLHttpRequest",
                 "Origin": "https://www.right.com.cn",
-                "DNT": "1",
-                "Connection": "keep-alive",
-                "Referer": "https://www.right.com.cn/forum/erling_qd-sign_in.html",
+                "Referer": self.sign_in_page_url,
                 "Cookie": self.cookie,
                 "Sec-Fetch-Dest": "empty",
                 "Sec-Fetch-Mode": "cors",
                 "Sec-Fetch-Site": "same-origin",
-                "Priority": "u=0",
                 "Pragma": "no-cache",
-                "Cache-Control": "no-cache"
+                "Cache-Control": "no-cache",
             }
 
-            data = f"formhash={self.formhash}"
+            data = {"formhash": self.formhash}
 
-            response = self.session.post(url, headers=headers, data=data, timeout=15)
+            response = self.session.post(self.sign_url, headers=headers, data=data, timeout=30)
             print(f"🔍 签到响应状态码: {response.status_code}")
+            response.raise_for_status()
 
-            if response.status_code == 200:
-                # 解析JSON响应
-                try:
-                    result = response.json()
-                    if isinstance(result, dict):
-                        if result.get('success') or '成功' in str(result.get('message', '')):
-                            return True, result.get('message', '签到成功')
-                        elif result.get('message'):
-                            message = result['message']
-                            # 检查是否已签到
-                            if '已签到' in message or '已经签到' in message:
-                                return True, message
-                            else:
-                                return False, f"签到失败: {message}"
-                except ValueError:
-                    return False, "响应格式错误，无法解析JSON"
-            else:
-                return False, f"签到请求失败，状态码: {response.status_code}"
+            try:
+                result = response.json()
+            except ValueError:
+                result = {"message": response.text}
+
+            if isinstance(result, dict):
+                message = str(result.get("message", "")).strip()
+                status = result.get("status")
+                success = result.get("success")
+
+                if success is True or status in (1, "1", "success", True):
+                    return True, message or "签到成功"
+                if "已签到" in message or "已经签到" in message:
+                    return True, message
+                if "成功" in message:
+                    return True, message
+                if message:
+                    return False, f"签到失败: {message}"
+            return True, "签到请求已提交"
 
         except Exception as e:
             return False, f"签到异常: {str(e)}"
