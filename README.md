@@ -178,7 +178,7 @@ export CDRAIL_DATA='{"token":"t1","app-token":"a1","Cookie":"c1","deviceId":"d1"
 
 | 变量名 | 说明 | 是否必需 | 示例值 | 备注 |
 |--------|------|----------|--------|------|
-| `DEEPFLOOD_COOKIE` | NodeSeek网站Cookie | **必需** | `cookie1&cookie2&cookie3` | 多账号用`&`分隔 |
+| `DEEPFLOOD_COOKIE` | DEEPFLOOD网站Cookie | **必需** | `cookie1&cookie2&cookie3` | 多账号用`&`分隔 |
 | `NS_RANDOM` | 签到随机参数 | 可选 | `true` | 默认值，通常无需修改 |
 
 #### ☁ leaflow签到配置
@@ -217,7 +217,7 @@ export CDRAIL_DATA='{"token":"t1","app-token":"a1","Cookie":"c1","deviceId":"d1"
 3. 找到请求头中的 `Cookie` 完整复制
 
 #### Deepflood Cookie
-1. 浏览器访问 [nodeseek.com](https://www.deepflood.com) 并登录
+1. 浏览器访问 [deepflood.com](https://www.deepflood.com) 并登录
 2. F12 开发者工具 → Network → 刷新页面
 3. 找到请求头中的 `Cookie` 完整复制
 
