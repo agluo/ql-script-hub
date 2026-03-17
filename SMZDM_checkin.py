@@ -319,8 +319,8 @@ def main():
         notify_user("什么值得买签到失败", error_msg)
         return
 
-    # 解析多账号Cookie
-    SMZDM_COOKIEs = SMZDM_COOKIE_env.split('&')
+    # 解析多账号Cookie（使用换行符分割，支持Cookie中包含&符号）
+    SMZDM_COOKIEs = [c.strip() for c in SMZDM_COOKIE_env.replace('\r\n', '\n').split('\n') if c.strip()]
     print(f"📝 共发现 {len(SMZDM_COOKIEs)} 个账号")
     
     success_count = 0

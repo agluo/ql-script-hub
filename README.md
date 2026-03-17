@@ -58,54 +58,54 @@ ql-script-hub/
    # 在青龙面板订阅管理中添加订阅
    # 订阅地址：https://github.com/agluo/ql-script-hub.git
    ```
-  <img width="774" height="1112" alt="image" src="https://github.com/user-attachments/assets/de6cf07f-7af2-42b9-8321-c2ccc542820b" />
-  
+
+<img width="774" height="1112" alt="image" src="https://github.com/user-attachments/assets/de6cf07f-7af2-42b9-8321-c2ccc542820b" />
+
 2. **配置环境变量**
 
-   
-| 变量名 | 说明 | 是否必需 | 示例值 | 备注 |
-|--------|------|----------|--------|------|
-| `TG_BOT_TOKEN` | Telegram机器人Token | 推荐 | `1234567890:AAG9rt-6RDaaX0HBLZQq0laNOh898iFYaRQ` | 获取方式见下方说明 |
-| `TG_USER_ID` | Telegram用户ID | 推荐 | `1434078534` | 获取方式见下方说明 |
-| `PUSH_KEY` | Server酱推送Key | 可选 | `SCTxxxxxxxxxxxxxxxxxxxxx` | 微信推送，访问 sct.ftqq.com 获取 |
-| `PUSH_PLUS_TOKEN` | Push+推送Token | 可选 | `xxxxxxxxxxxxxxxxxx` | 微信推送，访问 pushplus.plus 获取 |
-| `DD_BOT_TOKEN` | 钉钉机器人Token | 可选 | `xxxxxxxxxxxxxxxxxx` | 钉钉群机器人 |
-| `DD_BOT_SECRET` | 钉钉机器人密钥 | 可选 | `xxxxxxxxxxxxxxxxxx` | 钉钉群机器人密钥（可选） |
-| `BARK_PUSH` | Bark推送地址 | 可选 | `https://api.day.app/your_key/` | iOS Bark推送 |
+| 变量名              | 说明                | 是否必需 | 示例值                                             | 备注                              |
+| ------------------- | ------------------- | -------- | -------------------------------------------------- | --------------------------------- |
+| `TG_BOT_TOKEN`    | Telegram机器人Token | 推荐     | `1234567890:AAG9rt-6RDaaX0HBLZQq0laNOh898iFYaRQ` | 获取方式见下方说明                |
+| `TG_USER_ID`      | Telegram用户ID      | 推荐     | `1434078534`                                     | 获取方式见下方说明                |
+| `PUSH_KEY`        | Server酱推送Key     | 可选     | `SCTxxxxxxxxxxxxxxxxxxxxx`                       | 微信推送，访问 sct.ftqq.com 获取  |
+| `PUSH_PLUS_TOKEN` | Push+推送Token      | 可选     | `xxxxxxxxxxxxxxxxxx`                             | 微信推送，访问 pushplus.plus 获取 |
+| `DD_BOT_TOKEN`    | 钉钉机器人Token     | 可选     | `xxxxxxxxxxxxxxxxxx`                             | 钉钉群机器人                      |
+| `DD_BOT_SECRET`   | 钉钉机器人密钥      | 可选     | `xxxxxxxxxxxxxxxxxx`                             | 钉钉群机器人密钥（可选）          |
+| `BARK_PUSH`       | Bark推送地址        | 可选     | `https://api.day.app/your_key/`                  | iOS Bark推送                      |
 
 #### 🏔️ 恩山论坛签到配置
 
-| 变量名 | 说明 | 是否必需 | 示例值 | 备注 |
-|--------|------|----------|--------|------|
+| 变量名            | 说明           | 是否必需       | 示例值                 | 备注         |
+| ----------------- | -------------- | -------------- | ---------------------- | ------------ |
 | `enshan_cookie` | 恩山论坛Cookie | **必需** | `完整的Cookie字符串` | 单账号Cookie |
 
 #### 📱 NodeSeek 签到配置
 
-| 变量名 | 说明 | 是否必需 | 示例值 | 备注 |
-|--------|------|----------|--------|------|
-| `NODESEEK_COOKIE` | NodeSeek网站Cookie | **必需** | `cookie1&cookie2&cookie3` | 多账号用`&`分隔 |
-| `NS_RANDOM` | 签到随机参数 | 可选 | `true` | 默认值，通常无需修改 |
+| 变量名              | 说明               | 是否必需       | 示例值                      | 备注                 |
+| ------------------- | ------------------ | -------------- | --------------------------- | -------------------- |
+| `NODESEEK_COOKIE` | NodeSeek网站Cookie | **必需** | `cookie1&cookie2&cookie3` | 多账号用 `&`分隔   |
+| `NS_RANDOM`       | 签到随机参数       | 可选           | `true`                    | 默认值，通常无需修改 |
 
 #### ☁️ 夸克网盘签到配置
 
-| 变量名 | 说明 | 是否必需 | 示例值 | 备注 |
-|--------|------|----------|--------|------|
-| `QUARK_COOKIE` | 夸克网盘Cookie | **必需** | `cookie1&&cookie2` | 多账号用`&&`或回车分隔 |
+| 变量名           | 说明           | 是否必需       | 示例值               | 备注                      |
+| ---------------- | -------------- | -------------- | -------------------- | ------------------------- |
+| `QUARK_COOKIE` | 夸克网盘Cookie | **必需** | `cookie1&&cookie2` | 多账号用 `&&`或回车分隔 |
 
 #### 🚇 成都地铁签到配置
 
-| 变量名 | 说明 | 是否必需 | 示例值 | 备注 |
-|--------|------|----------|--------|------|
-| `CDRAIL_DATA` | 成都地铁请求数据（从抓包 headers 提取） | **必需** | `{"token":"xxx","app-token":"yyy","Cookie":"zzz"}` | 支持 `JSON` 或 `token=...&app-token=...&cookie=...`；多账号用换行或`@`分隔 |
+| 变量名          | 说明                                    | 是否必需       | 示例值                                               | 备注                                                                              |
+| --------------- | --------------------------------------- | -------------- | ---------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `CDRAIL_DATA` | 成都地铁请求数据（从抓包 headers 提取） | **必需** | `{"token":"xxx","app-token":"yyy","Cookie":"zzz"}` | 支持 `JSON` 或 `token=...&app-token=...&cookie=...`；多账号用换行或 `@`分隔 |
 
 `CDRAIL_DATA` 需要包含的字段（建议直接从抓包请求头复制/提取）：
 
-| 字段 | 是否必需 | 说明 |
-|------|----------|------|
-| `token` | **必需** | 请求头里的 `token` |
-| `app-token` | **必需** | 请求头里的 `app-token` |
-| `Cookie` / `cookie` | **必需** | 登录后的 Cookie（脚本会自动兼容大小写） |
-| `deviceId` / `device-id` | 建议 | 设备标识；仓库内默认值为占位符，推荐用你自己抓包到的设备ID |
+| 字段                         | 是否必需       | 说明                                                       |
+| ---------------------------- | -------------- | ---------------------------------------------------------- |
+| `token`                    | **必需** | 请求头里的 `token`                                       |
+| `app-token`                | **必需** | 请求头里的 `app-token`                                   |
+| `Cookie` / `cookie`      | **必需** | 登录后的 Cookie（脚本会自动兼容大小写）                    |
+| `deviceId` / `device-id` | 建议           | 设备标识；仓库内默认值为占位符，推荐用你自己抓包到的设备ID |
 
 格式示例：
 
@@ -123,110 +123,115 @@ export CDRAIL_DATA='{"token":"t1","app-token":"a1","Cookie":"c1","deviceId":"d1"
 
 #### 📦 顺丰速运签到配置
 
-| 变量名 | 说明 | 是否必需 | 示例值 | 备注 |
-|--------|------|----------|--------|------|
+| 变量名      | 说明            | 是否必需       | 示例值                  | 备注                 |
+| ----------- | --------------- | -------------- | ----------------------- | -------------------- |
 | `sfsyUrl` | 顺丰速运登录URL | **必需** | `https://mcs-mimp...` | 抓包获取，多账号换行 |
 
 #### 百度贴吧签到配置
 
-| 变量名 | 说明 | 是否必需 | 示例值 | 备注 |
-|--------|------|----------|--------|------|
+| 变量名           | 说明           | 是否必需       | 示例值                            | 备注                           |
+| ---------------- | -------------- | -------------- | --------------------------------- | ------------------------------ |
 | `TIEBA_COOKIE` | 百度贴吧Cookie | **必需** | `BDUSS=xxxxxx; STOKEN=xxxxx...` | 完整的Cookie字符串，多账号换行 |
 
-#### ☁️ 阿里云盘签到配置 
+#### ☁️ 阿里云盘签到配置
 
-| 变量名 | 说明 | 是否必需 | 示例值 | 备注 |
-|--------|------|----------|--------|------|
-| `ALIYUN_REFRESH_TOKEN` | 阿里云盘refresh_token | **必需** | `crsh166bdfde4751a4c0...` | 多账号用`&`或换行分隔 |
-| `AUTO_UPDATE_TOKEN` | 自动更新Token | 可选 | `true` | 默认`true`，自动维护token |
-| `PRIVACY_MODE` | 隐私保护模式 | 可选 | `true` | 默认`true`，脱敏显示敏感信息 |
+| 变量名                   | 说明                  | 是否必需       | 示例值                      | 备注                            |
+| ------------------------ | --------------------- | -------------- | --------------------------- | ------------------------------- |
+| `ALIYUN_REFRESH_TOKEN` | 阿里云盘refresh_token | **必需** | `crsh166bdfde4751a4c0...` | 多账号用换行分隔 |
+| `AUTO_UPDATE_TOKEN`    | 自动更新Token         | 可选           | `true`                    | 默认 `true`，自动维护token    |
+| `PRIVACY_MODE`         | 隐私保护模式          | 可选           | `true`                    | 默认 `true`，脱敏显示敏感信息 |
 
-#### 🛒 什么值得买签到配置 
+#### 🛒 什么值得买签到配置
 
-| 变量名 | 说明 | 是否必需 | 示例值 | 备注 |
-|--------|------|----------|--------|------|
+| 变量名           | 说明             | 是否必需       | 示例值                                  | 备注                       |
+| ---------------- | ---------------- | -------------- | --------------------------------------- | -------------------------- |
 | `SMZDM_COOKIE` | 什么值得买Cookie | **必需** | `__ckguid==xxxxx; device_id=xxxxx...` | 完整Cookie，多账号换行分隔 |
 
 #### ☁️ 百度网盘配置
 
-| 变量名 | 说明 | 示例 |
-|--------|------|------|
+| 变量名           | 说明       | 示例                         |
+| ---------------- | ---------- | ---------------------------- |
 | `BAIDU_COOKIE` | 网站Cookie | `BDUSS=xxx; STOKEN=xxx...` |
-| `PRIVACY_MODE` | 隐私模式 | `true` |
+| `PRIVACY_MODE` | 隐私模式   | `true`                     |
 
 #### 📡 ikuuu签到配置
 
-| 变量名 | 说明 | 示例 |
-|--------|------|------|
-| `IKUUU_EMAIL` | 登录邮箱 | `user@example.com` |
-| `IKUUU_PASSWD` | 登录密码 | `password123` |
+| 变量名           | 说明     | 示例                 |
+| ---------------- | -------- | -------------------- |
+| `IKUUU_EMAIL`  | 登录邮箱 | `user@example.com` |
+| `IKUUU_PASSWD` | 登录密码 | `password123`      |
 
 #### ☁️ 天翼云盘配置
 
-| 变量名 | 说明 | 示例 |
-|--------|------|------|
-| `TY_USERNAME` | 登录手机号 | `13812345678&13987654321` |
-| `TY_PASSWORD` | 登录密码 | `password1&password2` |
+| 变量名          | 说明       | 示例                        | 备注       |
+| --------------- | ---------- | --------------------------- | ---------- |
+| `TY_USERNAME` | 登录手机号 | `13812345678\n13987654321` | 多账号换行 |
+| `TY_PASSWORD` | 登录密码   | `password1\npassword2`     |            |
 
 #### 🎮 NGA论坛配置
 
-| 变量名 | 说明 | 示例 |
-|--------|------|------|
+| 变量名              | 说明            | 示例                   |
+| ------------------- | --------------- | ---------------------- |
 | `NGA_CREDENTIALS` | UID,AccessToken | `12345678,abcdef...` |
 
 #### 📱 deepflood签到配置
 
-| 变量名 | 说明 | 是否必需 | 示例值 | 备注 |
-|--------|------|----------|--------|------|
-| `DEEPFLOOD_COOKIE` | NodeSeek网站Cookie | **必需** | `cookie1&cookie2&cookie3` | 多账号用`&`分隔 |
-| `NS_RANDOM` | 签到随机参数 | 可选 | `true` | 默认值，通常无需修改 |
+| 变量名               | 说明               | 是否必需       | 示例值                      | 备注                 |
+| -------------------- | ------------------ | -------------- | --------------------------- | -------------------- |
+| `DEEPFLOOD_COOKIE` | NodeSeek网站Cookie | **必需** | `cookie1&cookie2&cookie3` | 多账号用 `&`分隔   |
+| `NS_RANDOM`        | 签到随机参数       | 可选           | `true`                    | 默认值，通常无需修改 |
 
 #### ☁ leaflow签到配置
 
-| 变量名 | 说明 | 是否必需 | 示例值 | 备注 |
-|--------|------|----------|--------|------|
-| `LEAFLOW_COOKIE` | leaflow网站Cookie | **必需** | `cookie` | 多账号用`&`分隔 |
-
+| 变量名             | 说明              | 是否必需       | 示例值     | 备注               |
+| ------------------ | ----------------- | -------------- | ---------- | ------------------ |
+| `LEAFLOW_COOKIE` | leaflow网站Cookie | **必需** | `cookie` | 多账号用换行分隔 |
 
 #### ⏰ 随机化配置（所有脚本共用）
 
-| 变量名 | 说明 | 是否必需 | 示例值 | 备注 |
-|--------|------|----------|--------|------|
-| `RANDOM_SIGNIN` | 启用随机签到 | 可选 | `true` | `true`启用，`false`禁用 |
-| `MAX_RANDOM_DELAY` | 随机延迟窗口（秒） | 可选 | `3600` | `3600`=1小时，`1800`=30分钟 |
+| 变量名               | 说明               | 是否必需 | 示例值   | 备注                            |
+| -------------------- | ------------------ | -------- | -------- | ------------------------------- |
+| `RANDOM_SIGNIN`    | 启用随机签到       | 可选     | `true` | `true`启用，`false`禁用     |
+| `MAX_RANDOM_DELAY` | 随机延迟窗口（秒） | 可选     | `3600` | `3600`=1小时，`1800`=30分钟 |
 
 ---
 
 ## 🔧 获取方式说明
 
 ### 📱 Telegram配置获取
+
 1. **创建机器人**: 与 [@BotFather](https://t.me/botfather) 对话，发送 `/newbot` 创建机器人
 2. **获取Token**: 创建完成后会收到 `TG_BOT_TOKEN`
 3. **获取用户ID**: 与 [@userinfobot](https://t.me/userinfobot) 对话获取 `TG_USER_ID`
 
 ### 🍪 Cookie获取方式
 
-#### 恩山论坛 Cookie  
+#### 恩山论坛 Cookie
+
 1. 浏览器访问 [恩山论坛](https://www.right.com.cn/FORUM/) 并登录
 2. F12 开发者工具 → Network → 刷新页面
 3. 找到请求头中的 `Cookie` 完整复制
 
 #### NodeSeek Cookie
+
 1. 浏览器访问 [nodeseek.com](https://www.nodeseek.com) 并登录
 2. F12 开发者工具 → Network → 刷新页面
 3. 找到请求头中的 `Cookie` 完整复制
 
 #### Deepflood Cookie
+
 1. 浏览器访问 [nodeseek.com](https://www.deepflood.com) 并登录
 2. F12 开发者工具 → Network → 刷新页面
 3. 找到请求头中的 `Cookie` 完整复制
 
 #### 夸克网盘 Cookie
+
 1. 浏览器访问 [夸克网盘](https://pan.quark.cn/) 并登录
-2. F12 开发者工具 → Network → 刷新页面  
+2. F12 开发者工具 → Network → 刷新页面
 3. 找到请求头中的 `Cookie` 完整复制
 
 #### 顺丰速运 sfsyUrl
+
 1. 顺丰APP绑定微信后，添加机器人发送"顺丰"
 2. 打开小程序或APP-我的-积分，抓包以下URL之一:
    - `https://mcs-mimp-web.sf-express.com/mcs-mimp/share/weChat/shareGiftReceiveRedirect`
@@ -234,39 +239,46 @@ export CDRAIL_DATA='{"token":"t1","app-token":"a1","Cookie":"c1","deviceId":"d1"
 3. 抓取URL后，使用 [URL编码工具](https://www.toolhelper.cn/EncodeDecode/Url) 进行编码
 
 #### 百度贴吧 Cookie
+
 1. 浏览器访问 [tieba.baidu.com](https://tieba.baidu.com) 并登录
-2. F12 开发者工具 → Network → 刷新页面  
+2. F12 开发者工具 → Network → 刷新页面
 3. 找到请求头中的完整 `Cookie` 复制
 4. 确保包含 `BDUSS` 参数
 
-#### 阿里云盘 refresh_token 
+#### 阿里云盘 refresh_token
+
 1. 浏览器访问 [阿里云盘网页版](https://www.aliyundrive.com/) 并登录
 2. 按 `F12` 打开开发者工具 → `Application` 标签页
 3. 左侧找到 `Local Storage` → `https://www.aliyundrive.com`
 4. 找到 `token` 项，复制 `refresh_token` 的值
 
-#### 什么值得买 Cookie 
+#### 什么值得买 Cookie
+
 1. 浏览器访问 [什么值得买](https://www.smzdm.com/) 并登录
 2. 按 `F12` 打开开发者工具 → `Network` 标签页
 3. 刷新页面，找到任意请求的 `Request Headers`
 4. 复制完整的 `Cookie` 值
 
-#### 百度网盘 Cookie 
+#### 百度网盘 Cookie
+
 1. 访问 [百度网盘](https://pan.baidu.com/) 登录
 2. F12 → Network → 复制Cookie
 
-#### Ikuuu 配置 
+#### Ikuuu 配置
+
 1. 在青龙面板中添加环境变量IKUUU_EMAIL（邮箱地址）
 2. 在青龙面板中添加环境变量IKUUU_PASSWD（对应密码）
 3. 多账号用英文逗号分隔: email1,email2
 4. 密码顺序要与邮箱顺序对应
 
-#### 天翼云盘配置 
+#### 天翼云盘配置
+
 1. 浏览器访问 [天翼云盘](https://e.dlife.cn/index.do) ，关闭设备锁
 2. 在青龙面板中添加环境变量TY_USERNAME（手机号）
 3. 在青龙面板中添加环境变量TY_PASSWD（对应密码）
 
-#### leaflow配置 
+#### leaflow配置
+
 1. 浏览器访问 [leaflow](https://leaflow.net/workspaces) ，关闭设备锁
 2. 点击签到试用
 3. 在新弹出来的页面中按F12 网络
@@ -275,14 +287,19 @@ export CDRAIL_DATA='{"token":"t1","app-token":"a1","Cookie":"c1","deviceId":"d1"
 6. 在新出现的请求中找到cookie值为PHPSESSID=XXXXX的一串
 
 #### NGA论坛配置
+
 1. 安装抓包工具并开启 HTTPS 解密，安装并信任证书 Android：HTTP Canary、HttpToolkit、mitmproxy、Charles; iOS：Stream、Charles
 2. 将手机的网络代理指向抓包工具（或使用工具的本机 VPN/代理模式）
 3. 打开 NGA 官方 App，确保已登录；在 App 内随便执行一个操作（进入首页/签到等）触发请求
 4. 在抓包记录中找到对以下地址的 POST 请求： https://ngabbs.com/nuke.php
 5. 打开该请求的请求体（Content-Type 一般是 application/x-www-form-urlencoded），复制以下参数的值：access_uid=你的UID;access_token=一串长字符串
-7. 将上述两者按“UID,AccessToken”格式填写为环境变量 NGA_CREDENTIALS
+6. 将上述两者按"UID,AccessToken"格式填写为环境变量 NGA_CREDENTIALS
    单账号示例：123456,abcdefg
-   多账号用 & 分隔：123456,abcdefg&234567,hijklmn
+   多账号用换行分隔：
+   ```
+   123456,abcdefg
+   234567,hijklmn
+   ```
 
 ---
 
@@ -299,7 +316,6 @@ MAX_RANDOM_DELAY=3600
 ```
 
 ---
-
 
 ## 🤝 贡献指南
 

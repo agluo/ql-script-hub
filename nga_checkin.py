@@ -303,8 +303,8 @@ def main():
         send_notification("NGA论坛签到失败", error_msg)
         return
 
-    # 解析多账号
-    accounts = [acc.strip() for acc in credentials_str.split('&') if acc.strip()]
+    # 解析多账号（使用换行符分割，支持凭证中包含&符号）
+    accounts = [acc.strip() for acc in credentials_str.replace('\r\n', '\n').split('\n') if acc.strip()]
     print(f"📝 共发现 {len(accounts)} 个账号")
     
     success_accounts = 0

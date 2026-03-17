@@ -292,9 +292,9 @@ def main():
         notify_user("天翼云盘签到失败", error_msg)
         return
     
-    # 解析多账号
-    usernames = [u.strip() for u in ty_username_env.split('&') if u.strip()]
-    passwords = [p.strip() for p in ty_password_env.split('&') if p.strip()]
+    # 解析多账号（使用换行符分割）
+    usernames = [u.strip() for u in ty_username_env.replace('\r\n', '\n').split('\n') if u.strip()]
+    passwords = [p.strip() for p in ty_password_env.replace('\r\n', '\n').split('\n') if p.strip()]
     
     if len(usernames) != len(passwords):
         error_msg = "❌ 用户名和密码数量不匹配"
