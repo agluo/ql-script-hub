@@ -41,7 +41,8 @@ ql-script-hub/
 ├── smzdm_checkin.py       # 什么值得买签到脚本
 ├── deepflood_checkin.py   # deepflood签到脚本
 ├── leaflow_checkin.py     # leaflow签到脚本
-└── tieba_checkin.py       # 贴吧签到脚本
+├── tieba_checkin.py       # 贴吧签到脚本
+└── tsthb_checkin.py       # 塔斯汀汉堡签到脚本
 ```
 
 ## 🚀 快速开始
@@ -146,6 +147,12 @@ export CDRAIL_DATA='{"token":"t1","app-token":"a1","Cookie":"c1","deviceId":"d1"
 | 变量名           | 说明             | 是否必需       | 示例值                                  | 备注                       |
 | ---------------- | ---------------- | -------------- | --------------------------------------- | -------------------------- |
 | `SMZDM_COOKIE` | 什么值得买Cookie | **必需** | `__ckguid==xxxxx; device_id=xxxxx...` | 完整Cookie，多账号换行分隔 |
+
+#### 🍔 塔斯汀汉堡签到配置
+
+| 变量名           | 说明             | 是否必需       | 示例值                      | 备注                       |
+| ---------------- | ---------------- | -------------- | --------------------------- | -------------------------- |
+| `tsthbck` | 塔斯汀汉堡user-token | **必需** | `xxxxx` | 微信小程序抓包获取，多账号用换行分隔 |
 
 #### ☁️ 百度网盘配置
 
