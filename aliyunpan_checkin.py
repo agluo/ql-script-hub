@@ -798,11 +798,8 @@ def main():
         notify_user("阿里云盘签到失败", error_msg)
         return
 
-    # 支持多账号（用换行或&分隔）
-    if '\n' in aliyun_tokens:
-        tokens = [token.strip() for token in aliyun_tokens.split('\n') if token.strip()]
-    else:
-        tokens = [token.strip() for token in aliyun_tokens.split('&') if token.strip()]
+    # 支持多账号（使用换行符分割，支持token中包含&符号）
+    tokens = [token.strip() for token in aliyun_tokens.replace('\r\n', '\n').split('\n') if token.strip()]
     
     print(f"📝 共发现 {len(tokens)} 个账号")
     

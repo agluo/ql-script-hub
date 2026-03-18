@@ -86,20 +86,20 @@ ql-script-hub/
 
 | Variable | Description | Required | Example | Notes |
 |--------|------|----------|--------|------|
-| `NODESEEK_COOKIE` | NodeSeek cookie | **Required** | `cookie1&cookie2&cookie3` | Separate multiple accounts with `&` |
+| `NODESEEK_COOKIE` | NodeSeek cookie | **Required** | `cookie1\ncookie2\ncookie3` | Separate multiple accounts with new lines |
 | `NS_RANDOM` | Random sign-in parameter | Optional | `true` | Usually no need to change |
 
 #### ☁️ Quark Drive
 
 | Variable | Description | Required | Example | Notes |
 |--------|------|----------|--------|------|
-| `QUARK_COOKIE` | Quark Drive cookie | **Required** | `cookie1&&cookie2` | Separate multiple accounts with `&&` or new lines |
+| `QUARK_COOKIE` | Quark Drive cookie | **Required** | `cookie1\ncookie2` | Separate multiple accounts with new lines |
 
 #### 🚇 Chengdu Metro
 
 | Variable | Description | Required | Example | Notes |
 |--------|------|----------|--------|------|
-| `CDRAIL_DATA` | Chengdu Metro request data extracted from captured headers | **Required** | `{"token":"xxx","app-token":"yyy","Cookie":"zzz"}` | Supports `JSON` or `token=...&app-token=...&cookie=...`; separate multiple accounts with new lines or `@` |
+| `CDRAIL_DATA` | Chengdu Metro request data extracted from captured headers | **Required** | `{"token":"xxx","app-token":"yyy","Cookie":"zzz"}` | Supports `JSON`; separate multiple accounts with new lines |
 
 `CDRAIL_DATA` should include the following fields, preferably copied directly from the captured request headers:
 
@@ -140,7 +140,7 @@ export CDRAIL_DATA='{"token":"t1","app-token":"a1","Cookie":"c1","deviceId":"d1"
 
 | Variable | Description | Required | Example | Notes |
 |--------|------|----------|--------|------|
-| `ALIYUN_REFRESH_TOKEN` | Aliyun Drive `refresh_token` | **Required** | `crsh166bdfde4751a4c0...` | Separate multiple accounts with `&` or new lines |
+| `ALIYUN_REFRESH_TOKEN` | Aliyun Drive `refresh_token` | **Required** | `crsh166bdfde4751a4c0...` | Separate multiple accounts with new lines |
 | `AUTO_UPDATE_TOKEN` | Auto update token | Optional | `true` | Default is `true` |
 | `PRIVACY_MODE` | Privacy mode | Optional | `true` | Default is `true`, masks sensitive values |
 
@@ -168,8 +168,8 @@ export CDRAIL_DATA='{"token":"t1","app-token":"a1","Cookie":"c1","deviceId":"d1"
 
 | Variable | Description | Example |
 |--------|------|------|
-| `TY_USERNAME` | Login phone number | `13812345678&13987654321` |
-| `TY_PASSWORD` | Login password | `password1&password2` |
+| `TY_USERNAME` | Login phone number | `13812345678` |
+| `TY_PASSWORD` | Login password | `password1` |
 
 #### 🎮 NGA Forum
 
@@ -181,14 +181,14 @@ export CDRAIL_DATA='{"token":"t1","app-token":"a1","Cookie":"c1","deviceId":"d1"
 
 | Variable | Description | Required | Example | Notes |
 |--------|------|----------|--------|------|
-| `DEEPFLOOD_COOKIE` | Deepflood website cookie | **Required** | `cookie1&cookie2&cookie3` | Separate multiple accounts with `&` |
+| `DEEPFLOOD_COOKIE` | Deepflood website cookie | **Required** | `cookie1\ncookie2\ncookie3` | Separate multiple accounts with new lines |
 | `NS_RANDOM` | Random sign-in parameter | Optional | `true` | Usually no need to change |
 
 #### ☁️ Leaflow
 
 | Variable | Description | Required | Example | Notes |
 |--------|------|----------|--------|------|
-| `LEAFLOW_COOKIE` | Leaflow website cookie | **Required** | `cookie` | Separate multiple accounts with `&` |
+| `LEAFLOW_COOKIE` | Leaflow website cookie | **Required** | `cookie` | Separate multiple accounts with new lines |
 
 #### ⏰ Randomization Settings (shared by all scripts)
 

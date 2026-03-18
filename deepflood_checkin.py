@@ -210,9 +210,9 @@ if __name__ == "__main__":
     max_random_delay = int(os.getenv("MAX_RANDOM_DELAY", "3600"))  # 默认1小时=3600秒
     random_signin = os.getenv("RANDOM_SIGNIN", "true").lower() == "true"
     
-    # 读取Cookie
+    # 读取Cookie（使用换行符分割，支持Cookie中包含&符号）
     all_cookies = os.getenv("DEEPFLOOD_COOKIE", "")
-    cookie_list = all_cookies.split("&")
+    cookie_list = all_cookies.replace('\r\n', '\n').split('\n')
     cookie_list = [c.strip() for c in cookie_list if c.strip()]
     
     print(f"共发现 {len(cookie_list)} 个Cookie")
