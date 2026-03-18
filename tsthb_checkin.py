@@ -178,13 +178,16 @@ def yx(ck):
 
 
 def main():
+    """主程序入口"""
+    # 随机延迟（整体延迟，在签到开始前执行）
+    if random_signin:
+        delay_seconds = random.randint(0, max_random_delay)
+        if delay_seconds > 0:
+            print(f"🎲 随机延迟: {format_time_remaining(delay_seconds)}")
+            wait_with_countdown(delay_seconds, "塔斯汀汉堡签到")
+    
     z = 1
     for ck in tsthbck:
-        # 随机延迟处理
-        if random_signin and z > 1:
-            delay_seconds = random.randint(0, max_random_delay)
-            wait_with_countdown(delay_seconds, f"账号{z}签到")
-        
         try:
             myprint(f'登录第{z}个账号')
             myprint('----------------------')
