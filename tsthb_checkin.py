@@ -9,7 +9,7 @@
 export tsthbck=""
 
 来源: https://raw.githubusercontent.com/linbailo/zyqinglong
-cron: 55 1,9,16 * * *
+cron: 55 9 * * *
 const $ = new Env("塔斯汀汉堡");
 """
 
