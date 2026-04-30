@@ -136,7 +136,7 @@ def run_checkin(account_index, secret_key):
     print(f"  [{name}] {status}")
     if checkin_detail:
         print(f"  [{name}] {checkin_detail}")
-    elif checkin_msg and checkin_code != 10000:
+    elif checkin_msg and checkin_code not in [10000, 6001]:
         print(f"  [{name}] {checkin_msg}")
 
     # 2. 获取用户信息
@@ -169,7 +169,7 @@ def run_checkin(account_index, secret_key):
     # 签到详情（成功显示流量，已签到显示原因）
     if checkin_detail:
         lines.append(f"  {checkin_detail}")
-    elif checkin_msg and checkin_code != 10000:
+    elif checkin_msg and checkin_code not in [10000, 6001]:
         lines.append(f"  {checkin_msg}")
 
     lines.extend([
@@ -184,9 +184,9 @@ def run_checkin(account_index, secret_key):
         "【套餐信息】",
         f"  套餐名称: {plan.get('plan_name', 'N/A')}",
         f"  套餐流量: {bytes_to_readable(plan.get('plan_traffic', 0))}",
-        f"  总计流量: {bytes_to_readable(plan.get('plan_traffic', 0) + plan.get('addon_traffic', 0))}",
+        f"  总计流量: {bytes_to_readable(int(plan.get('plan_traffic', 0)) + int(plan.get('addon_traffic', 0)))}",
         f"  已用流量: {bytes_to_readable(plan.get('used_traffic', 0))}",
-        f"  剩余流量: {bytes_to_readable(plan.get('plan_traffic', 0) + plan.get('addon_traffic', 0) - plan.get('used_traffic', 0))}",
+        f"  剩余流量: {bytes_to_readable(int(plan.get('plan_traffic', 0)) + int(plan.get('addon_traffic', 0)) - int(plan.get('used_traffic', 0)))}",
         f"  签到流量: {bytes_to_readable(plan.get('check_in_traffic', 0))}",
         f"  附加流量: {bytes_to_readable(plan.get('addon_traffic', 0))}",
         f"  隧道数量: {plan.get('tunnel_count', 0)} / {plan.get('tunnel_limit', 0)}",
