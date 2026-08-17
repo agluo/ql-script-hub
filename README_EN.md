@@ -331,4 +331,4 @@ This project is licensed under the [MIT License](LICENSE).
 
 If this project helps you, a star is appreciated ⭐️
 
-[![Star History Chart](https://api.star-history.com/svg?repos=agluo/ql-script-hub&type=Date)](https://star-history.com/#agluo/ql-script-hub&Date)
+[![Star History Chart](https://star-history.dera.page/svg?repos=agluo/ql-script-hub&type=Date)](https://star-history.dera.page/#agluo/ql-script-hub&Date)
