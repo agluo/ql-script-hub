@@ -375,4 +375,4 @@ MAX_RANDOM_DELAY=3600
 
 如果这个项目对你有帮助，请给个 Star ⭐️
 
-[![Star History Chart](https://api.star-history.com/svg?repos=agluo/ql-script-hub&type=Date)](https://star-history.com/#agluo/ql-script-hub&Date)
+[![Star History Chart](https://star-history.dera.page/svg?repos=agluo/ql-script-hub&type=Date)](https://star-history.dera.page/#agluo/ql-script-hub&Date)
